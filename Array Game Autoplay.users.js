@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Array Game Autoplay
-// @namespace    https://yakasov.github.io/
+// @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Array%20Game%20Autoplay.users.js
 // @version      0.3.1
 // @description  Autoplays Array Game by Demonin
 // @author       yakasov
