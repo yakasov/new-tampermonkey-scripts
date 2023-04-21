@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Array Game Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Array%20Game%20Autoplay.users.js
-// @version      0.3.1
+// @version      0.3.2
 // @description  Autoplays Array Game by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/arrayGame/
@@ -25,25 +25,36 @@ let challenges = {
       BAmount: new Decimal(2e11),
       CAmount: new Decimal(3),
     },
+    4: { // ?
+      BAmount: new Decimal(1e14),
+      CAmount: new Decimal(20),
+    },
+  },
+  1: {
+    1: {
+      BAmount: new Decimal(1e11),
+      CAmount: new Decimal(10),
+    },
+    2: { // ?
+      BAmount: new Decimal(1e12),
+      CAmount: new Decimal(20),
+    },
   },
 };
 
 function autobuyA() {
-  for (let i = 1; i < 3; i++) {
-    buyUpgrade(1, i);
+  if (game.CMilestonesReached < 6) { // Milestone 6 is upgrade A autobuying
+    for (let i = 1; i < 3; i++) {
+      buyUpgrade(1, i);
+    }
+
+    if (game.BUpgradesBought[4].mag === 1) {
+      buyUpgrade(1, 3);
+    }
   }
 
-  if (game.BUpgradesBought[4].mag === 1) {
-    buyUpgrade(1, 3);
-  }
-
-  buyGenerator(1, getCheapestGen(game.AGeneratorCosts));
-}
-
-function resetForB() {
-  // Only prestige if we can actually gain something and if we don't already passively gain B
-  if (game.BToGet.mag !== 0 && game.BUpgradesBought[2].mag !== 1) {
-    prestigeConfirm(1);
+  if (game.CMilestonesReached < 8) { // Milestone 8 is gen A autobuying
+    buyGenerator(1, getCheapestGen(game.AGeneratorCosts));
   }
 }
 
@@ -63,12 +74,26 @@ function autobuyB() {
   }
 }
 
+function autobuyC() {
+  // Save C for A + B mulitiplier instead of spending whilst unlocking milestones
+  if (game.CMilestonesReached >= 6) {
+    buyGenerator(3, getCheapestGen(game.CGeneratorCosts));
+  }
+}
+
+function resetForB() {
+  // Only prestige if we can actually gain something and if we don't already passively gain B
+  if (game.BToGet.mag !== 0 && game.BUpgradesBought[2].mag !== 1) {
+    prestigeConfirm(1);
+  }
+}
+
 function resetForC() {
   // Only prestige if we can actually gain something and if we don't already passively gain C
   if (game.CToGet.mag !== 0 && game.CMilestonesReached < 10) {
-    if (game.CMilestonesReached < 3) {
+    if (game.CMilestonesReached < 5) {
       prestigeConfirm(2);
-    } else if (game.CMilestonesReached < 5 && game.CToGet.mag >= 2) {
+    } else if (game.CMilestonesReached < 7 && game.CToGet.mag >= 2) {
       prestigeConfirm(2);
     } // up to milestone 5, ch-a2
   }
@@ -96,15 +121,16 @@ function playChallenges() {
     const tier = (game.currentChallenge % 6) + 1;
     const goal = new Decimal(challengeGoals[challenge][tier]);
     switch (challenge) {
-      // just guessing how the game.currentChallenge val works
-      case 0:
+      case 0: // A1
         if (game.array[0].gt(goal)) {
           finishChallenge();
         }
         break;
-      case 1:
+      case 1: // A2
+        if (game.array[1].gt(goal)) {
+          finishChallenge();
+        }
         break;
-      // B
       default:
         break;
     }
@@ -134,7 +160,7 @@ function main() {
   if (started) {
     autobuyA();
     autobuyB();
-    // autobuyC();
+    autobuyC();
     // autobuyD();
   }
 }
@@ -142,7 +168,7 @@ function main() {
 function mainPrestige() {
   if (started) {
     resetForB();
-    // resetForC();
+    resetForC();
     // resetForD();
   }
 }
