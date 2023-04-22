@@ -25,9 +25,10 @@ let challenges = {
       BAmount: new Decimal(2e11),
       CAmount: new Decimal(3),
     },
-    4: { // ?
-      BAmount: new Decimal(1e14),
-      CAmount: new Decimal(20),
+    4: {
+      // ?
+      BAmount: new Decimal(1e15),
+      CAmount: new Decimal(30),
     },
   },
   1: {
@@ -35,15 +36,16 @@ let challenges = {
       BAmount: new Decimal(1e11),
       CAmount: new Decimal(10),
     },
-    2: { // ?
-      BAmount: new Decimal(1e12),
-      CAmount: new Decimal(20),
+    2: {
+      BAmount: new Decimal(1e15),
+      CAmount: new Decimal(30),
     },
   },
 };
 
 function autobuyA() {
-  if (game.CMilestonesReached < 6) { // Milestone 6 is upgrade A autobuying
+  if (game.CMilestonesReached < 6) {
+    // Milestone 6 is upgrade A autobuying
     for (let i = 1; i < 3; i++) {
       buyUpgrade(1, i);
     }
@@ -53,7 +55,8 @@ function autobuyA() {
     }
   }
 
-  if (game.CMilestonesReached < 8) { // Milestone 8 is gen A autobuying
+  if (game.CMilestonesReached < 8) {
+    // Milestone 8 is gen A autobuying
     buyGenerator(1, getCheapestGen(game.AGeneratorCosts));
   }
 }
@@ -75,27 +78,40 @@ function autobuyB() {
 }
 
 function autobuyC() {
-  // Save C for A + B mulitiplier instead of spending whilst unlocking milestones
-  if (game.CMilestonesReached >= 6) {
-    buyGenerator(3, getCheapestGen(game.CGeneratorCosts));
+  if (game.currentChallenge === 0) {
+    // Save C for A + B mulitiplier instead of spending whilst unlocking milestones
+    if (
+      (game.CMilestonesReached >= 6 && game.CGeneratorsBought[0].mag <= 3) ||
+      game.CMilestonesReached >= 8
+    ) {
+      buyGenerator(3, getCheapestGen(game.CGeneratorCosts));
+    }
   }
 }
 
 function resetForB() {
   // Only prestige if we can actually gain something and if we don't already passively gain B
-  if (game.BToGet.mag !== 0 && game.BUpgradesBought[2].mag !== 1) {
+  if (
+    game.BToGet.mag !== 0 &&
+    game.BUpgradesBought[2].mag !== 1 &&
+    game.currentChallenge === 0
+  ) {
     prestigeConfirm(1);
   }
 }
 
 function resetForC() {
   // Only prestige if we can actually gain something and if we don't already passively gain C
-  if (game.CToGet.mag !== 0 && game.CMilestonesReached < 10) {
-    if (game.CMilestonesReached < 5) {
-      prestigeConfirm(2);
-    } else if (game.CMilestonesReached < 7 && game.CToGet.mag >= 2) {
-      prestigeConfirm(2);
-    } // up to milestone 5, ch-a2
+  if (game.currentChallenge === 0) {
+    if (game.CToGet.mag !== 0 && game.CMilestonesReached < 10) {
+      if (game.CMilestonesReached < 5) {
+        prestigeConfirm(2);
+      } else if (game.CMilestonesReached < 8 && game.CToGet.mag >= 2) {
+        prestigeConfirm(2);
+      } else if (game.CMilestonesReached < 10 && game.CToGet.mag >= 3) {
+        prestigeConfirm(2); // up to milestone 5, ch-a2
+      }
+    }
   }
 }
 
@@ -108,7 +124,8 @@ function startChallenges() {
           game.array[1].gte(reqs.BAmount) &&
           game.array[2].gte(reqs.CAmount)
         ) {
-          enterChallenge(ch + 1);
+          console.log("Entering challenge", parseInt(ch) + 1);
+          enterChallenge(parseInt(ch) + 1);
         }
       }
     }
@@ -117,23 +134,26 @@ function startChallenges() {
 
 function playChallenges() {
   if (game.currentChallenge !== 0 && started) {
-    const challenge = Math.floor(game.currentChallenge / 6);
-    const tier = (game.currentChallenge % 6) + 1;
-    const goal = new Decimal(challengeGoals[challenge][tier]);
-    switch (challenge) {
-      case 0: // A1
-        if (game.array[0].gt(goal)) {
-          finishChallenge();
-        }
-        break;
-      case 1: // A2
-        if (game.array[1].gt(goal)) {
-          finishChallenge();
-        }
-        break;
-      default:
-        break;
+    const challenge = Math.floor(game.currentChallenge / 4);
+    const tier = game.challengesBeaten[game.currentChallenge - 1];
+    const goal = new Decimal(challengeGoals[game.currentChallenge - 1][tier]);
+    if (game.array[challenge].gt(goal)) {
+      finishChallenge();
     }
+    // switch (challenge) {
+    //   case 0: // A challenges
+    //     if (game.array[0].gt(goal)) {
+    //       finishChallenge();
+    //     }
+    //     break;
+    //   case 1: // B challenges
+    //     if (game.array[1].gt(goal)) {
+    //       finishChallenge();
+    //     }
+    //     break;
+    //   default:
+    //     break;
+    // }
   }
 }
 
