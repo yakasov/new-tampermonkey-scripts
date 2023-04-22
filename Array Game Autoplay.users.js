@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Array Game Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Array%20Game%20Autoplay.users.js
-// @version      0.3.2
+// @version      0.4.0
 // @description  Autoplays Array Game by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/arrayGame/
@@ -26,9 +26,16 @@ let challenges = {
       CAmount: new Decimal(3),
     },
     4: {
-      // ?
       BAmount: new Decimal(1e15),
       CAmount: new Decimal(30),
+    },
+    5: {
+      BAmount: new Decimal(2e22),
+      CAmount: new Decimal(50),
+    },
+    6: {
+      BAmount: new Decimal(2e36),
+      CAmount: new Decimal(50),
     },
   },
   1: {
@@ -39,6 +46,32 @@ let challenges = {
     2: {
       BAmount: new Decimal(1e15),
       CAmount: new Decimal(30),
+    },
+    3: {
+      BAmount: new Decimal(2e22),
+      CAmount: new Decimal(50),
+    },
+    4: {
+      BAmount: new Decimal(2e26),
+      CAmount: new Decimal(50),
+    },
+    5: {
+      BAmount: new Decimal(2e32),
+      CAmount: new Decimal(50),
+    },
+    6: {
+      BAmount: new Decimal(2e36),
+      CAmount: new Decimal(50),
+    },
+  },
+  2: {
+    1: {
+      BAmount: new Decimal(1e40),
+      CAmount: new Decimal(50),
+    },
+    1: {
+      BAmount: new Decimal(3e47),
+      CAmount: new Decimal(250),
     },
   },
 };
@@ -82,8 +115,12 @@ function autobuyC() {
     // Save C for A + B mulitiplier instead of spending whilst unlocking milestones
     if (
       (game.CMilestonesReached >= 6 && game.CGeneratorsBought[0].mag <= 3) ||
-      game.CMilestonesReached >= 8
+      (game.CMilestonesReached >= 8 && game.CGeneratorsBought[0].mag <= 6) ||
+      game.CMilestonesReached >= 10
     ) {
+      if (game.CGeneratorsBought[1].mag === 0) {
+        buyGenerator(3, 2);
+      }
       buyGenerator(3, getCheapestGen(game.CGeneratorCosts));
     }
   }
@@ -103,14 +140,13 @@ function resetForB() {
 function resetForC() {
   // Only prestige if we can actually gain something and if we don't already passively gain C
   if (game.currentChallenge === 0) {
-    if (game.CToGet.mag !== 0 && game.CMilestonesReached < 10) {
-      if (game.CMilestonesReached < 5) {
-        prestigeConfirm(2);
-      } else if (game.CMilestonesReached < 8 && game.CToGet.mag >= 2) {
-        prestigeConfirm(2);
-      } else if (game.CMilestonesReached < 10 && game.CToGet.mag >= 3) {
-        prestigeConfirm(2); // up to milestone 5, ch-a2
-      }
+    if (
+      (game.CMilestonesReached < 5 && game.CToGet.mag >= 1) ||
+      (game.CMilestonesReached < 8 && game.CToGet.mag >= 2) ||
+      (game.CMilestonesReached < 9 && game.CToGet.mag >= 3) ||
+      (game.CMilestonesReached < 10 && game.CToGet.mag >= 5)
+    ) {
+      prestigeConfirm(2);
     }
   }
 }
