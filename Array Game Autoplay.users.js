@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Array Game Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Array%20Game%20Autoplay.users.js
-// @version      0.4.0
+// @version      0.4.1
 // @description  Autoplays Array Game by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/arrayGame/
@@ -13,66 +13,34 @@
 let started = false;
 let challenges = {
   0: {
-    1: {
-      BAmount: new Decimal(1e9),
-      CAmount: new Decimal(1),
-    },
-    2: {
-      BAmount: new Decimal(1e8),
-      CAmount: new Decimal(2),
-    },
-    3: {
-      BAmount: new Decimal(2e11),
-      CAmount: new Decimal(3),
-    },
-    4: {
-      BAmount: new Decimal(1e15),
-      CAmount: new Decimal(30),
-    },
-    5: {
-      BAmount: new Decimal(2e22),
-      CAmount: new Decimal(50),
-    },
-    6: {
-      BAmount: new Decimal(2e36),
-      CAmount: new Decimal(50),
-    },
+    1: { BAmount: new Decimal(1e9), CAmount: new Decimal(1) },
+    2: { BAmount: new Decimal(1e8), CAmount: new Decimal(2) },
+    3: { BAmount: new Decimal(2e11), CAmount: new Decimal(3) },
+    4: { BAmount: new Decimal(1e15), CAmount: new Decimal(30) },
+    5: { BAmount: new Decimal(2e22), CAmount: new Decimal(50) },
+    6: { BAmount: new Decimal(2e36), CAmount: new Decimal(50) },
   },
   1: {
-    1: {
-      BAmount: new Decimal(1e11),
-      CAmount: new Decimal(10),
-    },
-    2: {
-      BAmount: new Decimal(1e15),
-      CAmount: new Decimal(30),
-    },
-    3: {
-      BAmount: new Decimal(2e22),
-      CAmount: new Decimal(50),
-    },
-    4: {
-      BAmount: new Decimal(2e26),
-      CAmount: new Decimal(50),
-    },
-    5: {
-      BAmount: new Decimal(2e32),
-      CAmount: new Decimal(50),
-    },
-    6: {
-      BAmount: new Decimal(2e36),
-      CAmount: new Decimal(50),
-    },
+    1: { BAmount: new Decimal(1e11), CAmount: new Decimal(10) },
+    2: { BAmount: new Decimal(1e15), CAmount: new Decimal(30) },
+    3: { BAmount: new Decimal(2e22), CAmount: new Decimal(50) },
+    4: { BAmount: new Decimal(2e26), CAmount: new Decimal(50) },
+    5: { BAmount: new Decimal(2e32), CAmount: new Decimal(50) },
+    6: { BAmount: new Decimal(2e36), CAmount: new Decimal(50) },
   },
   2: {
-    1: {
-      BAmount: new Decimal(1e40),
-      CAmount: new Decimal(50),
-    },
-    1: {
-      BAmount: new Decimal(3e47),
-      CAmount: new Decimal(250),
-    },
+    1: { BAmount: new Decimal(1e40), CAmount: new Decimal(50) },
+    2: { BAmount: new Decimal(3e47), CAmount: new Decimal(0) },
+    3: { BAmount: new Decimal(2e62), CAmount: new Decimal(0) },
+    4: { BAmount: new Decimal(8e78), CAmount: new Decimal(0) },
+    5: { BAmount: new Decimal(1e97), CAmount: new Decimal(2e4) },
+    6: { BAmount: new Decimal(2e113), CAmount: new Decimal(1e6) },
+  },
+  3: {
+    1: { BAmount: new Decimal(1e68), CAmount: new Decimal(0) },
+    2: { BAmount: new Decimal(7e83), CAmount: new Decimal(2e4) },
+    3: { BAmount: new Decimal(5e106), CAmount: new Decimal(1e6) },
+    4: { BAmount: new Decimal(1e120), CAmount: new Decimal(1e7) },
   },
 };
 
@@ -102,6 +70,10 @@ function autobuyB() {
       }
     }
 
+    if (game.CMilestonesReached >= 14) {
+      buyUpgrade(2, 9);
+    }
+
     // Only buy B generators if we passively gain B or we don't gain enough for it to be worth waiting for
     if (game.BUpgradesBought[2].mag === 1 || game.array[1].mag < 60) {
       buyABoosterator();
@@ -112,7 +84,7 @@ function autobuyB() {
 
 function autobuyC() {
   if (game.currentChallenge === 0) {
-    // Save C for A + B mulitiplier instead of spending whilst unlocking milestones
+    // Save C for A + B multiplier instead of spending whilst unlocking milestones
     if (
       (game.CMilestonesReached >= 6 && game.CGeneratorsBought[0].mag <= 3) ||
       (game.CMilestonesReached >= 8 && game.CGeneratorsBought[0].mag <= 6) ||
@@ -151,6 +123,14 @@ function resetForC() {
   }
 }
 
+function resetForD() {
+  // Only prestige if we can actually gain something and if we don't already passively gain D
+  // Only reset if all 24 A challenges are done
+  if (game.DToGet.mag !== 0 && game.currentChallenge === 0) {
+    prestigeConfirm(3);
+  }
+}
+
 function startChallenges() {
   if (game.currentChallenge === 0 && started) {
     for (const [ch, tiers] of Object.entries(challenges)) {
@@ -160,7 +140,6 @@ function startChallenges() {
           game.array[1].gte(reqs.BAmount) &&
           game.array[2].gte(reqs.CAmount)
         ) {
-          console.log("Entering challenge", parseInt(ch) + 1);
           enterChallenge(parseInt(ch) + 1);
         }
       }
