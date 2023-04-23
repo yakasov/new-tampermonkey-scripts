@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Array Game Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Array%20Game%20Autoplay.users.js
-// @version      0.4.8
+// @version      0.4.9
 // @description  Autoplays Array Game by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/arrayGame/
@@ -142,7 +142,8 @@ function resetForD() {
     game.currentChallenge === 0 &&
     game.challengesBeaten.slice(0, 4) == "6,6,6,6" &&
     game.DToGet.mag !== 0 &&
-    game.array[2].gte(1e10)
+    game.array[2].gte(1e10) &&
+    game.challengesBeaten[4] >= game.array[3].mag // will cause problems down the line...
   ) {
     prestigeConfirm(3);
   }
