@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Array Game Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Array%20Game%20Autoplay.users.js
-// @version      0.4.7
+// @version      0.4.8
 // @description  Autoplays Array Game by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/arrayGame/
@@ -120,20 +120,19 @@ function resetForC() {
   if (
     game.currentChallenge === 0 &&
     game.array[1].gte(1e10) &&
-    cPrestigeReqs()
+    [5, 8, 9, 10].some(cPrestigeReqs)
   ) {
     prestigeConfirm(2);
   }
 }
 
-function cPrestigeReqs() {
-  const xs = [5, 8, 9, 10];
-  const dMult = game.array[3].pow(0.8).mul(3).add(1);
-  return xs.some((x) => {
+function cPrestigeReqs(x) {
+  return (
     game.CMilestonesReached < x &&
-      game.CToGet.mag >=
-        ((2 / 30) * x ** 3 - 1.3 * x ** 2 + (259 / 30) * x - 18) * dMult;
-  });
+    game.CToGet.mag >=
+      ((2 / 30) * x ** 3 - 1.3 * x ** 2 + (259 / 30) * x - 18) *
+        game.array[3].pow(0.8).mul(3).add(1)
+  );
 }
 
 function resetForD() {
