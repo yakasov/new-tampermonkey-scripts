@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Array Game Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Array%20Game%20Autoplay.users.js
-// @version      0.4.2
+// @version      0.4.3
 // @description  Autoplays Array Game by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/arrayGame/
@@ -30,19 +30,22 @@ let challenges = {
   },
   2: {
     1: { BAmount: new Decimal(1e40), CAmount: new Decimal(50) },
-    2: { BAmount: new Decimal(3e47), CAmount: new Decimal(0) },
-    3: { BAmount: new Decimal(2e62), CAmount: new Decimal(0) },
-    4: { BAmount: new Decimal(8e78), CAmount: new Decimal(0) },
+    2: { BAmount: new Decimal(3e47) },
+    3: { BAmount: new Decimal(2e62) },
+    4: { BAmount: new Decimal(8e78) },
     5: { BAmount: new Decimal(1e97), CAmount: new Decimal(2e4) },
     6: { BAmount: new Decimal(2e113), CAmount: new Decimal(1e6) },
   },
   3: {
-    1: { BAmount: new Decimal(1e68), CAmount: new Decimal(0) },
+    1: { BAmount: new Decimal(1e68) },
     2: { BAmount: new Decimal(7e83), CAmount: new Decimal(2e4) },
     3: { BAmount: new Decimal(5e106), CAmount: new Decimal(1e6) },
     4: { BAmount: new Decimal(1e120), CAmount: new Decimal(1e7) },
     5: { BAmount: new Decimal(1e140), CAmount: new Decimal(1e9) },
-    6: { BAmount: new Decimal(1e160), CAmount: new Decimal(1e10) },
+    6: { BAmount: new Decimal(2e157), CAmount: new Decimal(3e10) },
+  },
+  4: {
+    1: { CAmount: new Decimal(9e99), DAmount: new Decimal(1) },
   },
 };
 
@@ -103,9 +106,10 @@ function autobuyC() {
 function resetForB() {
   // Only prestige if we can actually gain something and if we don't already passively gain B
   if (
-    game.BToGet.mag !== 0 &&
+    game.currentChallenge === 0 &&
     game.BUpgradesBought[2].mag !== 1 &&
-    game.currentChallenge === 0
+    game.BToGet.mag !== 0 &&
+    game.array[0].gte(1e10)
   ) {
     prestigeConfirm(1);
   }
@@ -113,15 +117,15 @@ function resetForB() {
 
 function resetForC() {
   // Only prestige if we can actually gain something and if we don't already passively gain C
-  if (game.currentChallenge === 0) {
-    if (
-      (game.CMilestonesReached < 5 && game.CToGet.mag >= 1) ||
+  if (
+    game.currentChallenge === 0 &&
+    game.array[1].gte(1e10) &&
+    ((game.CMilestonesReached < 5 && game.CToGet.mag >= 1) ||
       (game.CMilestonesReached < 8 && game.CToGet.mag >= 2) ||
       (game.CMilestonesReached < 9 && game.CToGet.mag >= 3) ||
-      (game.CMilestonesReached < 10 && game.CToGet.mag >= 5)
-    ) {
-      prestigeConfirm(2);
-    }
+      (game.CMilestonesReached < 10 && game.CToGet.mag >= 5))
+  ) {
+    prestigeConfirm(2);
   }
 }
 
@@ -129,9 +133,10 @@ function resetForD() {
   // Only prestige if we can actually gain something and if we don't already passively gain D
   // Only reset if all 24 A challenges are done
   if (
-    game.DToGet.mag !== 0 &&
     game.currentChallenge === 0 &&
-    game.challengesBeaten.slice(0, 4) === [6, 6, 6, 6]
+    game.challengesBeaten.slice(0, 4) == "6,6,6,6" &&
+    game.DToGet.mag !== 0 &&
+    game.array[2].gte(1e10)
   ) {
     prestigeConfirm(3);
   }
@@ -143,8 +148,9 @@ function startChallenges() {
       for (const [tier, reqs] of Object.entries(tiers)) {
         if (
           game.challengesBeaten[ch] < tier &&
-          game.array[1].gte(reqs.BAmount) &&
-          game.array[2].gte(reqs.CAmount)
+          game.array[1].gte(reqs.BAmount ?? 0) &&
+          game.array[2].gte(reqs.CAmount ?? 0) &&
+          game.array[3].gte(reqs.DAmount ?? 0)
         ) {
           enterChallenge(parseInt(ch) + 1);
         }
@@ -158,23 +164,9 @@ function completeChallenges() {
     const ch = game.currentChallenge - 1;
     const tier = game.challengesBeaten[ch];
     const goal = new Decimal(challengeGoals[ch][tier]);
-    if (game.array[Math.floor(ch / 4)].gt(goal)) {
+    if (game.array[Math.floor(ch / 4)].gte(goal)) {
       finishChallenge();
     }
-    // switch (challenge) {
-    //   case 0: // A challenges
-    //     if (game.array[0].gt(goal)) {
-    //       finishChallenge();
-    //     }
-    //     break;
-    //   case 1: // B challenges
-    //     if (game.array[1].gt(goal)) {
-    //       finishChallenge();
-    //     }
-    //     break;
-    //   default:
-    //     break;
-    // }
   }
 }
 
