@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Array Game Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Array%20Game%20Autoplay.users.js
-// @version      0.4.1
+// @version      0.4.2
 // @description  Autoplays Array Game by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/arrayGame/
@@ -41,6 +41,8 @@ let challenges = {
     2: { BAmount: new Decimal(7e83), CAmount: new Decimal(2e4) },
     3: { BAmount: new Decimal(5e106), CAmount: new Decimal(1e6) },
     4: { BAmount: new Decimal(1e120), CAmount: new Decimal(1e7) },
+    5: { BAmount: new Decimal(1e140), CAmount: new Decimal(1e9) },
+    6: { BAmount: new Decimal(1e160), CAmount: new Decimal(1e10) },
   },
 };
 
@@ -126,7 +128,11 @@ function resetForC() {
 function resetForD() {
   // Only prestige if we can actually gain something and if we don't already passively gain D
   // Only reset if all 24 A challenges are done
-  if (game.DToGet.mag !== 0 && game.currentChallenge === 0) {
+  if (
+    game.DToGet.mag !== 0 &&
+    game.currentChallenge === 0 &&
+    game.challengesBeaten.slice(0, 4) === [6, 6, 6, 6]
+  ) {
     prestigeConfirm(3);
   }
 }
@@ -147,12 +153,12 @@ function startChallenges() {
   }
 }
 
-function playChallenges() {
+function completeChallenges() {
   if (game.currentChallenge !== 0 && started) {
-    const challenge = Math.floor(game.currentChallenge / 4);
-    const tier = game.challengesBeaten[game.currentChallenge - 1];
-    const goal = new Decimal(challengeGoals[game.currentChallenge - 1][tier]);
-    if (game.array[challenge].gt(goal)) {
+    const ch = game.currentChallenge - 1;
+    const tier = game.challengesBeaten[ch];
+    const goal = new Decimal(challengeGoals[ch][tier]);
+    if (game.array[Math.floor(ch / 4)].gt(goal)) {
       finishChallenge();
     }
     // switch (challenge) {
@@ -204,7 +210,7 @@ function mainPrestige() {
   if (started) {
     resetForB();
     resetForC();
-    // resetForD();
+    resetForD();
   }
 }
 
@@ -216,6 +222,6 @@ GM_registerMenuCommand("Toggle autoplay", () => {
 setTitleText();
 checkConfirmations();
 setInterval(main, 100); // 1/10 seconds to try and buy generators (and upgrades)
-setInterval(mainPrestige, 45000); // 45 seconds to try and prestige
+setInterval(mainPrestige, 15000); // 15 seconds to try and prestige
 setInterval(startChallenges, 1000); // 1 second to try and enter challenges
-setInterval(playChallenges, 1000); // 1 second to try and play challenges
+setInterval(completeChallenges, 1000); // 1 second to try and complete challenges
