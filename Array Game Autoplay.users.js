@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Array Game Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Array%20Game%20Autoplay.users.js
-// @version      0.4.3
+// @version      0.4.4
 // @description  Autoplays Array Game by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/arrayGame/
@@ -47,6 +47,10 @@ let challenges = {
   4: {
     1: { CAmount: new Decimal(9e99), DAmount: new Decimal(1) },
   },
+};
+
+window.alert = function () {
+  return true;
 };
 
 function autobuyA() {
@@ -117,13 +121,14 @@ function resetForB() {
 
 function resetForC() {
   // Only prestige if we can actually gain something and if we don't already passively gain C
+  const dMult = game.array[3].pow(0.8).mul(3).add(1);
   if (
     game.currentChallenge === 0 &&
     game.array[1].gte(1e10) &&
-    ((game.CMilestonesReached < 5 && game.CToGet.mag >= 1) ||
-      (game.CMilestonesReached < 8 && game.CToGet.mag >= 2) ||
-      (game.CMilestonesReached < 9 && game.CToGet.mag >= 3) ||
-      (game.CMilestonesReached < 10 && game.CToGet.mag >= 5))
+    ((game.CMilestonesReached < 5 && game.CToGet.mag >= 1 * dMult) ||
+      (game.CMilestonesReached < 8 && game.CToGet.mag >= 2 * dMult) ||
+      (game.CMilestonesReached < 9 && game.CToGet.mag >= 3 * dMult) ||
+      (game.CMilestonesReached < 10 && game.CToGet.mag >= 5 * dMult))
   ) {
     prestigeConfirm(2);
   }
