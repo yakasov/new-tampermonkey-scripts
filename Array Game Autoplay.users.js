@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Array Game Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Array%20Game%20Autoplay.users.js
-// @version      0.4.5
+// @version      0.4.6
 // @description  Autoplays Array Game by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/arrayGame/
@@ -47,10 +47,6 @@ let challenges = {
   4: {
     1: { CAmount: new Decimal(9e99), DAmount: new Decimal(1) },
   },
-};
-
-window.alert = function () {
-  return true;
 };
 
 function autobuyA() {
