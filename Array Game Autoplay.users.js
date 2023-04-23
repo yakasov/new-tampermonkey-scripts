@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Array Game Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Array%20Game%20Autoplay.users.js
-// @version      0.4.6
+// @version      0.4.7
 // @description  Autoplays Array Game by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/arrayGame/
@@ -120,7 +120,7 @@ function resetForC() {
   if (
     game.currentChallenge === 0 &&
     game.array[1].gte(1e10) &&
-    cPrestigeToGetReqs()
+    cPrestigeReqs()
   ) {
     prestigeConfirm(2);
   }
