@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Array Game Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Array%20Game%20Autoplay.users.js
-// @version      0.4.4
+// @version      0.4.5
 // @description  Autoplays Array Game by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/arrayGame/
@@ -15,13 +15,13 @@ let challenges = {
   0: {
     1: { BAmount: new Decimal(1e9), CAmount: new Decimal(1) },
     2: { BAmount: new Decimal(1e8), CAmount: new Decimal(2) },
-    3: { BAmount: new Decimal(2e11), CAmount: new Decimal(3) },
+    3: { BAmount: new Decimal(1.5e12), CAmount: new Decimal(3) },
     4: { BAmount: new Decimal(1e15), CAmount: new Decimal(30) },
     5: { BAmount: new Decimal(2e22), CAmount: new Decimal(50) },
     6: { BAmount: new Decimal(2e36), CAmount: new Decimal(50) },
   },
   1: {
-    1: { BAmount: new Decimal(1e11), CAmount: new Decimal(10) },
+    1: { BAmount: new Decimal(1e12), CAmount: new Decimal(10) },
     2: { BAmount: new Decimal(1e15), CAmount: new Decimal(30) },
     3: { BAmount: new Decimal(2e22), CAmount: new Decimal(50) },
     4: { BAmount: new Decimal(2e26), CAmount: new Decimal(50) },
@@ -121,17 +121,23 @@ function resetForB() {
 
 function resetForC() {
   // Only prestige if we can actually gain something and if we don't already passively gain C
-  const dMult = game.array[3].pow(0.8).mul(3).add(1);
   if (
     game.currentChallenge === 0 &&
     game.array[1].gte(1e10) &&
-    ((game.CMilestonesReached < 5 && game.CToGet.mag >= 1 * dMult) ||
-      (game.CMilestonesReached < 8 && game.CToGet.mag >= 2 * dMult) ||
-      (game.CMilestonesReached < 9 && game.CToGet.mag >= 3 * dMult) ||
-      (game.CMilestonesReached < 10 && game.CToGet.mag >= 5 * dMult))
+    cPrestigeToGetReqs()
   ) {
     prestigeConfirm(2);
   }
+}
+
+function cPrestigeReqs() {
+  const xs = [5, 8, 9, 10];
+  const dMult = game.array[3].pow(0.8).mul(3).add(1);
+  return xs.some((x) => {
+    game.CMilestonesReached < x &&
+      game.CToGet.mag >=
+        ((2 / 30) * x ** 3 - 1.3 * x ** 2 + (259 / 30) * x - 18) * dMult;
+  });
 }
 
 function resetForD() {
