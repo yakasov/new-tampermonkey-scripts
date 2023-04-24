@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Array Game Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Array%20Game%20Autoplay.users.js
-// @version      0.6.5
+// @version      0.6.6
 // @description  Autoplays Array Game by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/arrayGame/
@@ -65,7 +65,7 @@ let challenges = {
     3: { CAmount: new Decimal(1e27), DAmount: new Decimal(400) },
     4: { CAmount: new Decimal(3e32), DAmount: new Decimal(2500) },
     5: { CAmount: new Decimal(2e38), DAmount: new Decimal(3e4) },
-    6: { CAmount: new Decimal(9e999), DAmount: new Decimal(9e999) },
+    6: { CAmount: new Decimal(1e44), DAmount: new Decimal(4e4) },
   },
   6: {
     // CH-B3: A + B gen prod / 1e35
@@ -73,8 +73,8 @@ let challenges = {
     2: { CAmount: new Decimal(2e30), DAmount: new Decimal(150) },
     3: { CAmount: new Decimal(1e35), DAmount: new Decimal(3750) },
     4: { CAmount: new Decimal(1e37), DAmount: new Decimal(2e4) }, // wait for D milestone 12
-    5: { CAmount: new Decimal(9e999), DAmount: new Decimal(9e999) },
-    6: { CAmount: new Decimal(9e999), DAmount: new Decimal(9e999) },
+    5: { CAmount: new Decimal(1e44), DAmount: new Decimal(2e4) }, // could be lower?
+    6: { CAmount: new Decimal(2e47), DAmount: new Decimal(4e4) },
   },
   7: {
     // CH-B4: A + B gen prod ^ 0.1
@@ -147,7 +147,8 @@ function autobuyD() {
     game.currentChallenge === 0 &&
     ((game.DMilestonesReached >= 5 && game.DGeneratorsBought[0].mag <= 3) ||
       (game.DMilestonesReached >= 8 &&
-        !(game.array[3].mag > 10000 && game.DMilestonesReached < 13))) // if D > 10000, save for 50000 milestone
+        !(game.array[3].mag > 1e4 && game.DMilestonesReached < 14) && // if D > 10000, save for 50000 milestone then 200000 milestone
+        !(game.array[3].mag > 2.5e5 && game.DMilestonesReached < 15))) // if D > 250000, save for 2.5 mil milestone
   ) {
     buyMaxGenerators(4, 6);
   }
