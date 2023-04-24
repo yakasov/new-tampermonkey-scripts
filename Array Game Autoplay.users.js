@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Array Game Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Array%20Game%20Autoplay.users.js
-// @version      0.5.1
+// @version      0.5.2
 // @description  Autoplays Array Game by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/arrayGame/
@@ -157,11 +157,16 @@ function resetForD() {
 function cubicPrestigeReqs(x) {
   // Adjusts prestige gain depending on milestone count
   // y = 0.0667x^3 - 1.3x^2 + 8.633x - 18
+  // 5m => 1tg, 8m => 2tg, 9m => 3tg, 10m => 5tg... (tg: to get)
   return (
     this[0] < x &&
     this[1] >=
-      ((1 / 15) * x ** 3 - 1.3 * x ** 2 + (259 / 30) * x - 18) *
-        (this[2] && this[2] === "D" ? 1 : game.array[3].pow(0.8).mul(3).add(1))
+      Math.floor(
+        ((1 / 15) * x ** 3 - 1.3 * x ** 2 + (259 / 30) * x - 18) *
+          (this[2] && this[2] === "D"
+            ? 1
+            : game.array[3].pow(0.8).mul(3).add(1))
+      )
   );
 }
 
@@ -173,7 +178,8 @@ function startChallenges() {
           game.challengesBeaten[ch] < tier &&
           game.array[1].gte(reqs.BAmount ?? 0) &&
           game.array[2].gte(reqs.CAmount ?? 0) &&
-          game.array[3].gte(reqs.DAmount ?? 0)
+          game.array[3].gte(reqs.DAmount ?? 0) &&
+          !enteringChallenge
         ) {
           enterChallenge(parseInt(ch) + 1);
         }
@@ -187,7 +193,7 @@ function completeChallenges() {
     const ch = game.currentChallenge - 1;
     const tier = game.challengesBeaten[ch];
     const goal = new Decimal(challengeGoals[ch][tier]);
-    if (game.array[Math.floor(ch / 4)].gte(goal)) {
+    if (game.array[0].gte(goal)) {
       finishChallenge();
     }
   }
