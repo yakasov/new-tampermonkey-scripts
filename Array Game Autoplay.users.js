@@ -48,12 +48,16 @@ let challenges = {
   4: {
     1: { CAmount: new Decimal(1e7), DAmount: new Decimal(1) }, // could be lower?
     2: { CAmount: new Decimal(1e10), DAmount: new Decimal(2) },
+    3: { CAmount: new Decimal(1e10), DAmount: new Decimal(5) },
+    4: { CAmount: new Decimal(1e10), DAmount: new Decimal(10) },
+  },
+  5: {
+    1: { CAmount: new Decimal(1e14), DAmount: new Decimal(15) },
   },
 };
 
 function autobuyA() {
   if (game.CMilestonesReached < 6) {
-    // Milestone 6 is upgrade A autobuying
     for (let i = 1; i < 3; i++) {
       buyUpgrade(1, i);
     }
@@ -64,16 +68,17 @@ function autobuyA() {
   }
 
   if (game.CMilestonesReached < 8) {
-    // Milestone 8 is gen A autobuying
     buyGenerator(1, getCheapestGen(game.AGeneratorCosts));
   }
 }
 
 function autobuyB() {
   if (game.currentChallenge === 0 || game.currentChallenge === 5) {
-    for (let i = 1; i < 9; i++) {
-      if (game.BUpgradesBought[i - 1].mag === 0) {
-        buyUpgrade(2, i);
+    if (game.DMilestonesReached < 6) {
+      for (let i = 1; i < 9; i++) {
+        if (game.BUpgradesBought[i - 1].mag === 0) {
+          buyUpgrade(2, i);
+        }
       }
     }
 
@@ -82,8 +87,13 @@ function autobuyB() {
     }
 
     // Only buy B generators if we passively gain B or we don't gain enough for it to be worth waiting for
-    if (game.BUpgradesBought[2].mag === 1 || game.array[1].mag < 60) {
-      buyABoosterator();
+    if (
+      (game.BUpgradesBought[2].mag === 1 || game.array[1].mag < 60) &&
+      game.DMilestonesReached < 7
+    ) {
+      if (game.DMilestonesReached < 6) {
+        buyABoosterator();
+      }
       buyGenerator(2, getCheapestGen(game.BGeneratorCosts));
     }
   }
