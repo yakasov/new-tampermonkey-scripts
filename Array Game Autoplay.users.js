@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Array Game Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Array%20Game%20Autoplay.users.js
-// @version      0.5.0
+// @version      0.5.1
 // @description  Autoplays Array Game by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/arrayGame/
@@ -43,7 +43,7 @@ let challenges = {
     3: { BAmount: new Decimal(1e115), CAmount: new Decimal(5e6) },
     4: { BAmount: new Decimal(1e120), CAmount: new Decimal(1e7) },
     5: { BAmount: new Decimal(1e140), CAmount: new Decimal(2.5e8) },
-    6: { BAmount: new Decimal(2e157), CAmount: new Decimal(3e10) },
+    6: { BAmount: new Decimal(5e157), CAmount: new Decimal(1e10) },
   },
   4: {
     1: { CAmount: new Decimal(1e7), DAmount: new Decimal(1) }, // could be lower?
@@ -128,11 +128,10 @@ function resetForC() {
   if (
     game.currentChallenge === 0 &&
     game.array[1].gte(1e10) &&
-    resetScaling.some(
-      cubicPrestigeReqs,
+    resetScaling.some(cubicPrestigeReqs, [
       game.CMilestonesReached,
-      game.CToGet.mag
-    )
+      game.CToGet.mag,
+    ])
   ) {
     prestigeConfirm(2);
   }
@@ -145,25 +144,24 @@ function resetForD() {
     game.currentChallenge === 0 &&
     game.challengesBeaten.slice(0, 4) == "6,6,6,6" &&
     game.array[2].gte(1e10) &&
-    resetScaling.some(
-      cubicPrestigeReqs,
+    resetScaling.some(cubicPrestigeReqs, [
       game.DMilestonesReached,
       game.DToGet.mag,
-      "D"
-    )
+      "D",
+    ])
   ) {
     prestigeConfirm(3);
   }
 }
 
-function cubicPrestigeReqs(x, m, tg, l = "") {
+function cubicPrestigeReqs(x) {
   // Adjusts prestige gain depending on milestone count
   // y = 0.0667x^3 - 1.3x^2 + 8.633x - 18
   return (
-    m < x &&
-    tg >=
+    this[0] < x &&
+    this[1] >=
       ((1 / 15) * x ** 3 - 1.3 * x ** 2 + (259 / 30) * x - 18) *
-        (l === "D" ? game.array[3].pow(0.8).mul(3).add(1) : 1)
+        (this[2] && this[2] === "D" ? 1 : game.array[3].pow(0.8).mul(3).add(1))
   );
 }
 
