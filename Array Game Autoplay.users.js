@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Array Game Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Array%20Game%20Autoplay.users.js
-// @version      0.4.9
+// @version      0.5.0
 // @description  Autoplays Array Game by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/arrayGame/
@@ -11,6 +11,7 @@
 
 /* eslint-disable no-undef */
 let started = false;
+const resetScaling = [5, 8, 9, 10];
 let challenges = {
   0: {
     1: { BAmount: new Decimal(1e9), CAmount: new Decimal(1) },
@@ -39,13 +40,14 @@ let challenges = {
   3: {
     1: { BAmount: new Decimal(1e68) },
     2: { BAmount: new Decimal(7e83), CAmount: new Decimal(2e4) },
-    3: { BAmount: new Decimal(5e106), CAmount: new Decimal(1e6) },
+    3: { BAmount: new Decimal(1e115), CAmount: new Decimal(5e6) },
     4: { BAmount: new Decimal(1e120), CAmount: new Decimal(1e7) },
-    5: { BAmount: new Decimal(1e140), CAmount: new Decimal(1e9) },
+    5: { BAmount: new Decimal(1e140), CAmount: new Decimal(2.5e8) },
     6: { BAmount: new Decimal(2e157), CAmount: new Decimal(3e10) },
   },
   4: {
-    1: { CAmount: new Decimal(9e99), DAmount: new Decimal(1) },
+    1: { CAmount: new Decimal(1e7), DAmount: new Decimal(1) }, // could be lower?
+    2: { CAmount: new Decimal(1e10), DAmount: new Decimal(2) },
   },
 };
 
@@ -68,7 +70,7 @@ function autobuyA() {
 }
 
 function autobuyB() {
-  if (game.currentChallenge === 0) {
+  if (game.currentChallenge === 0 || game.currentChallenge === 5) {
     for (let i = 1; i < 9; i++) {
       if (game.BUpgradesBought[i - 1].mag === 0) {
         buyUpgrade(2, i);
@@ -103,6 +105,12 @@ function autobuyC() {
   }
 }
 
+function autobuyD() {
+  if (game.currentChallenge === 0) {
+    buyGenerator(4, getCheapestGen(game.DGeneratorCosts));
+  }
+}
+
 function resetForB() {
   // Only prestige if we can actually gain something and if we don't already passively gain B
   if (
@@ -120,19 +128,14 @@ function resetForC() {
   if (
     game.currentChallenge === 0 &&
     game.array[1].gte(1e10) &&
-    [5, 8, 9, 10].some(cPrestigeReqs)
+    resetScaling.some(
+      cubicPrestigeReqs,
+      game.CMilestonesReached,
+      game.CToGet.mag
+    )
   ) {
     prestigeConfirm(2);
   }
-}
-
-function cPrestigeReqs(x) {
-  return (
-    game.CMilestonesReached < x &&
-    game.CToGet.mag >=
-      ((2 / 30) * x ** 3 - 1.3 * x ** 2 + (259 / 30) * x - 18) *
-        game.array[3].pow(0.8).mul(3).add(1)
-  );
 }
 
 function resetForD() {
@@ -141,12 +144,27 @@ function resetForD() {
   if (
     game.currentChallenge === 0 &&
     game.challengesBeaten.slice(0, 4) == "6,6,6,6" &&
-    game.DToGet.mag !== 0 &&
     game.array[2].gte(1e10) &&
-    game.challengesBeaten[4] >= game.array[3].mag // will cause problems down the line...
+    resetScaling.some(
+      cubicPrestigeReqs,
+      game.DMilestonesReached,
+      game.DToGet.mag,
+      "D"
+    )
   ) {
     prestigeConfirm(3);
   }
+}
+
+function cubicPrestigeReqs(x, m, tg, l = "") {
+  // Adjusts prestige gain depending on milestone count
+  // y = 0.0667x^3 - 1.3x^2 + 8.633x - 18
+  return (
+    m < x &&
+    tg >=
+      ((1 / 15) * x ** 3 - 1.3 * x ** 2 + (259 / 30) * x - 18) *
+        (l === "D" ? game.array[3].pow(0.8).mul(3).add(1) : 1)
+  );
 }
 
 function startChallenges() {
@@ -201,7 +219,7 @@ function main() {
     autobuyA();
     autobuyB();
     autobuyC();
-    // autobuyD();
+    autobuyD();
   }
 }
 
