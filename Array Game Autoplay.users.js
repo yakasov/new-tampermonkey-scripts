@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Array Game Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Array%20Game%20Autoplay.users.js
-// @version      0.5.2
+// @version      0.5.3
 // @description  Autoplays Array Game by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/arrayGame/
@@ -178,8 +178,7 @@ function startChallenges() {
           game.challengesBeaten[ch] < tier &&
           game.array[1].gte(reqs.BAmount ?? 0) &&
           game.array[2].gte(reqs.CAmount ?? 0) &&
-          game.array[3].gte(reqs.DAmount ?? 0) &&
-          !enteringChallenge
+          game.array[3].gte(reqs.DAmount ?? 0)
         ) {
           enterChallenge(parseInt(ch) + 1);
         }
