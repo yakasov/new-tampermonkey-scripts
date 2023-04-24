@@ -49,11 +49,17 @@ let challenges = {
     1: { CAmount: new Decimal(1e7), DAmount: new Decimal(1) }, // could be lower?
     2: { CAmount: new Decimal(1e10), DAmount: new Decimal(2) },
     3: { CAmount: new Decimal(1e10), DAmount: new Decimal(5) },
-    4: { CAmount: new Decimal(5e16), DAmount: new Decimal(75) },
+    4: { CAmount: new Decimal(1e18), DAmount: new Decimal(75) }, // not 100% accurate
+    5: { CAmount: new Decimal(9e999), DAmount: new Decimal(9e999) },
+    6: { CAmount: new Decimal(9e999), DAmount: new Decimal(9e999) },
   },
   5: {
     1: { CAmount: new Decimal(1e12), DAmount: new Decimal(30) },
-    2: { CAmount: new Decimal(1e17), DAmount: new Decimal(75) },
+    2: { CAmount: new Decimal(1e18), DAmount: new Decimal(100) },
+    3: { CAmount: new Decimal(9e999), DAmount: new Decimal(9e999) },
+    4: { CAmount: new Decimal(9e999), DAmount: new Decimal(9e999) },
+    5: { CAmount: new Decimal(9e999), DAmount: new Decimal(9e999) },
+    6: { CAmount: new Decimal(9e999), DAmount: new Decimal(9e999) },
   },
 };
 
@@ -108,9 +114,6 @@ function autobuyC() {
       (game.CMilestonesReached >= 8 && game.CGeneratorsBought[0].mag <= 6) ||
       game.CMilestonesReached >= 10)
   ) {
-    if (game.CGeneratorsBought[1].mag === 0) {
-      buyGenerator(3, 2);
-    }
     buyMaxGenerators(3, 6);
   }
 }
@@ -118,9 +121,8 @@ function autobuyC() {
 function autobuyD() {
   if (
     game.currentChallenge === 0 &&
-    ((game.DMilestonesReached >= 6 && game.DGeneratorsBought[0].mag <= 3) ||
-      (game.DMilestonesReached >= 8 && game.DGeneratorsBought[0].mag <= 6) ||
-      game.DMilestonesReached >= 10)
+    ((game.DMilestonesReached >= 5 && game.DGeneratorsBought[0].mag <= 3) ||
+      game.DMilestonesReached >= 8)
   ) {
     buyMaxGenerators(4, 6);
   }
