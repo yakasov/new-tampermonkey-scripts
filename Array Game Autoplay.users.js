@@ -49,10 +49,11 @@ let challenges = {
     1: { CAmount: new Decimal(1e7), DAmount: new Decimal(1) }, // could be lower?
     2: { CAmount: new Decimal(1e10), DAmount: new Decimal(2) },
     3: { CAmount: new Decimal(1e10), DAmount: new Decimal(5) },
-    4: { CAmount: new Decimal(1e10), DAmount: new Decimal(10) },
+    4: { CAmount: new Decimal(5e16), DAmount: new Decimal(75) },
   },
   5: {
-    1: { CAmount: new Decimal(1e14), DAmount: new Decimal(10) },
+    1: { CAmount: new Decimal(1e12), DAmount: new Decimal(30) },
+    2: { CAmount: new Decimal(1e17), DAmount: new Decimal(75) },
   },
 };
 
@@ -100,23 +101,27 @@ function autobuyB() {
 }
 
 function autobuyC() {
-  if (game.currentChallenge === 0) {
-    // Save C for A + B multiplier instead of spending whilst unlocking milestones
-    if (
-      (game.CMilestonesReached >= 6 && game.CGeneratorsBought[0].mag <= 3) ||
+  // Save C for A + B multiplier instead of spending whilst unlocking milestones
+  if (
+    game.currentChallenge === 0 &&
+    ((game.CMilestonesReached >= 6 && game.CGeneratorsBought[0].mag <= 3) ||
       (game.CMilestonesReached >= 8 && game.CGeneratorsBought[0].mag <= 6) ||
-      game.CMilestonesReached >= 10
-    ) {
-      if (game.CGeneratorsBought[1].mag === 0) {
-        buyGenerator(3, 2);
-      }
-      buyMaxGenerators(3, 6);
+      game.CMilestonesReached >= 10)
+  ) {
+    if (game.CGeneratorsBought[1].mag === 0) {
+      buyGenerator(3, 2);
     }
+    buyMaxGenerators(3, 6);
   }
 }
 
 function autobuyD() {
-  if (game.currentChallenge === 0) {
+  if (
+    game.currentChallenge === 0 &&
+    ((game.DMilestonesReached >= 6 && game.DGeneratorsBought[0].mag <= 3) ||
+      (game.DMilestonesReached >= 8 && game.DGeneratorsBought[0].mag <= 6) ||
+      game.DMilestonesReached >= 10)
+  ) {
     buyMaxGenerators(4, 6);
   }
 }
@@ -138,6 +143,7 @@ function resetForC() {
   if (
     game.currentChallenge === 0 &&
     game.array[1].gte(1e10) &&
+    game.CMilestonesReached < 10 &&
     resetScaling.some(cubicPrestigeReqs, [
       game.CMilestonesReached,
       game.CToGet.mag,
@@ -154,6 +160,7 @@ function resetForD() {
     game.currentChallenge === 0 &&
     game.challengesBeaten.slice(0, 4) == "6,6,6,6" &&
     game.array[2].gte(1e10) &&
+    game.DMilestonesReached < 8 &&
     resetScaling.some(cubicPrestigeReqs, [
       game.DMilestonesReached,
       game.DToGet.mag,
