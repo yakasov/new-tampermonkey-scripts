@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Array Game Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Array%20Game%20Autoplay.users.js
-// @version      0.5.3
+// @version      0.6.0
 // @description  Autoplays Array Game by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/arrayGame/
@@ -52,7 +52,7 @@ let challenges = {
     4: { CAmount: new Decimal(1e10), DAmount: new Decimal(10) },
   },
   5: {
-    1: { CAmount: new Decimal(1e14), DAmount: new Decimal(15) },
+    1: { CAmount: new Decimal(1e14), DAmount: new Decimal(10) },
   },
 };
 
@@ -68,7 +68,7 @@ function autobuyA() {
   }
 
   if (game.CMilestonesReached < 8) {
-    buyGenerator(1, getCheapestGen(game.AGeneratorCosts));
+    buyMaxGenerators(1, 6);
   }
 }
 
@@ -94,7 +94,7 @@ function autobuyB() {
       if (game.DMilestonesReached < 6) {
         buyABoosterator();
       }
-      buyGenerator(2, getCheapestGen(game.BGeneratorCosts));
+      buyMaxGenerators(2, 6);
     }
   }
 }
@@ -110,14 +110,14 @@ function autobuyC() {
       if (game.CGeneratorsBought[1].mag === 0) {
         buyGenerator(3, 2);
       }
-      buyGenerator(3, getCheapestGen(game.CGeneratorCosts));
+      buyMaxGenerators(3, 6);
     }
   }
 }
 
 function autobuyD() {
   if (game.currentChallenge === 0) {
-    buyGenerator(4, getCheapestGen(game.DGeneratorCosts));
+    buyMaxGenerators(4, 6);
   }
 }
 
@@ -206,12 +206,6 @@ function completeChallenges() {
       finishChallenge();
     }
   }
-}
-
-function getCheapestGen(costs) {
-  const min = new Decimal(Math.min(...costs));
-  const gen = costs.find((d) => d.equals(min));
-  return costs.indexOf(gen) + 1;
 }
 
 function setTitleText() {
