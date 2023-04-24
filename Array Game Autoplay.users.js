@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Array Game Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Array%20Game%20Autoplay.users.js
-// @version      0.6.0
+// @version      0.6.3
 // @description  Autoplays Array Game by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/arrayGame/
@@ -14,6 +14,7 @@ let started = false;
 const resetScaling = [5, 8, 9, 10];
 let challenges = {
   0: {
+    // CH-A1: A-1 prod ^0.5, cannot buy A gens
     1: { BAmount: new Decimal(1e9), CAmount: new Decimal(1) },
     2: { BAmount: new Decimal(1e8), CAmount: new Decimal(2) },
     3: { BAmount: new Decimal(1.5e12), CAmount: new Decimal(3) },
@@ -22,6 +23,7 @@ let challenges = {
     6: { BAmount: new Decimal(2e36), CAmount: new Decimal(50) },
   },
   1: {
+    // CH-A2: A-2 amount divides A-2 prod
     1: { BAmount: new Decimal(1e12), CAmount: new Decimal(10) },
     2: { BAmount: new Decimal(1e15), CAmount: new Decimal(30) },
     3: { BAmount: new Decimal(2e22), CAmount: new Decimal(50) },
@@ -30,6 +32,7 @@ let challenges = {
     6: { BAmount: new Decimal(2e36), CAmount: new Decimal(50) },
   },
   2: {
+    // CH-A3: no A-3
     1: { BAmount: new Decimal(1e40), CAmount: new Decimal(50) },
     2: { BAmount: new Decimal(3e47) },
     3: { BAmount: new Decimal(2e62) },
@@ -38,6 +41,7 @@ let challenges = {
     6: { BAmount: new Decimal(2e113), CAmount: new Decimal(1e6) },
   },
   3: {
+    // CH-A4: A gen prod ^0.2
     1: { BAmount: new Decimal(1e68) },
     2: { BAmount: new Decimal(7e83), CAmount: new Decimal(2e4) },
     3: { BAmount: new Decimal(1e115), CAmount: new Decimal(5e6) },
@@ -46,16 +50,36 @@ let challenges = {
     6: { BAmount: new Decimal(5e157), CAmount: new Decimal(1e10) },
   },
   4: {
+    // CH-B1: B gens + A boosters cannot be produced, B gens can be bought
     1: { CAmount: new Decimal(1e7), DAmount: new Decimal(1) }, // could be lower?
     2: { CAmount: new Decimal(1e10), DAmount: new Decimal(2) },
     3: { CAmount: new Decimal(1e10), DAmount: new Decimal(5) },
     4: { CAmount: new Decimal(1e18), DAmount: new Decimal(75) }, // not 100% accurate
+    5: { CAmount: new Decimal(1e23), DAmount: new Decimal(200) },
+    6: { CAmount: new Decimal(6e30), DAmount: new Decimal(1000) },
+  },
+  5: {
+    // CH-B2: no B-1 prod, C-1 makes A-5, A-1 ^0.5
+    1: { CAmount: new Decimal(1e12), DAmount: new Decimal(30) },
+    2: { CAmount: new Decimal(1e18), DAmount: new Decimal(100) },
+    3: { CAmount: new Decimal(1e27), DAmount: new Decimal(400) },
+    4: { CAmount: new Decimal(3e32), DAmount: new Decimal(2500) },
+    5: { CAmount: new Decimal(2e37), DAmount: new Decimal(4000) },
+    6: { CAmount: new Decimal(9e999), DAmount: new Decimal(9e999) },
+  },
+  6: {
+    // CH-B3: A + B gen prod / 1e35
+    1: { CAmount: new Decimal(1e12) }, // could be lower?
+    2: { CAmount: new Decimal(2e30), DAmount: new Decimal(150) },
+    3: { CAmount: new Decimal(1e35), DAmount: new Decimal(3750) },
+    4: { CAmount: new Decimal(1e40), DAmount: new Decimal(5500) },
     5: { CAmount: new Decimal(9e999), DAmount: new Decimal(9e999) },
     6: { CAmount: new Decimal(9e999), DAmount: new Decimal(9e999) },
   },
-  5: {
-    1: { CAmount: new Decimal(1e12), DAmount: new Decimal(30) },
-    2: { CAmount: new Decimal(1e18), DAmount: new Decimal(100) },
+  7: {
+    // CH-B4: A + B gen prod ^ 0.1
+    1: { CAmount: new Decimal(9e999), DAmount: new Decimal(9e999) },
+    2: { CAmount: new Decimal(9e999), DAmount: new Decimal(9e999) },
     3: { CAmount: new Decimal(9e999), DAmount: new Decimal(9e999) },
     4: { CAmount: new Decimal(9e999), DAmount: new Decimal(9e999) },
     5: { CAmount: new Decimal(9e999), DAmount: new Decimal(9e999) },
