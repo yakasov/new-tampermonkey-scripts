@@ -63,27 +63,27 @@ let challenges = {
     1: { CAmount: new Decimal(1e12), DAmount: new Decimal(30) },
     2: { CAmount: new Decimal(1e18), DAmount: new Decimal(100) },
     3: { CAmount: new Decimal(1e27), DAmount: new Decimal(400) },
-    4: { CAmount: new Decimal(3e32), DAmount: new Decimal(2500) },
-    5: { CAmount: new Decimal(2e38), DAmount: new Decimal(3e4) },
-    6: { CAmount: new Decimal(1e44), DAmount: new Decimal(4e4) },
+    4: { CAmount: new Decimal(3e32) },
+    5: { CAmount: new Decimal(2e38) },
+    6: { CAmount: new Decimal(1e44) },
   },
   6: {
     // CH-B3: A + B gen prod / 1e35
     1: { CAmount: new Decimal(1e12) }, // could be lower?
     2: { CAmount: new Decimal(2e30), DAmount: new Decimal(150) },
-    3: { CAmount: new Decimal(1e35), DAmount: new Decimal(3750) },
-    4: { CAmount: new Decimal(1e37), DAmount: new Decimal(2e4) }, // wait for D milestone 12
-    5: { CAmount: new Decimal(1e44), DAmount: new Decimal(2e4) }, // could be lower?
-    6: { CAmount: new Decimal(2e47), DAmount: new Decimal(4e4) },
+    3: { CAmount: new Decimal(1e35) },
+    4: { CAmount: new Decimal(1e37) }, // wait for D milestone 12
+    5: { CAmount: new Decimal(1e44) }, // could be lower?
+    6: { CAmount: new Decimal(2e47) },
   },
   7: {
     // CH-B4: A + B gen prod ^ 0.1
-    1: { CAmount: new Decimal(1e51), DAmount: new Decimal(1e5) },
-    2: { CAmount: new Decimal(1e55), DAmount: new Decimal(4e5) }, // could be lower? affected by D milestone 16
-    3: { CAmount: new Decimal(1e57), DAmount: new Decimal(7e5) }, // could be lower? affected by D milestone 16
-    4: { CAmount: new Decimal(1e64), DAmount: new Decimal(1e6) }, // completes around 1e65 and 2.5e6
-    5: { CAmount: new Decimal(2e68), DAmount: new Decimal(1e6) }, // completes around 6e69 and 9e6
-    6: { CAmount: new Decimal(3e72), DAmount: new Decimal(2e6) }, // completes around 2.3e74 and 8e7
+    1: { CAmount: new Decimal(1e51) },
+    2: { CAmount: new Decimal(1e55) }, // could be lower? affected by D milestone 16
+    3: { CAmount: new Decimal(1e57) }, // could be lower? affected by D milestone 16
+    4: { CAmount: new Decimal(1e64) }, // completes around 1e65 and 2.5e6
+    5: { CAmount: new Decimal(2e68) }, // completes around 6e69 and 9e6
+    6: { CAmount: new Decimal(3e72) }, // completes around 2.3e74 and 8e7
   },
 };
 
