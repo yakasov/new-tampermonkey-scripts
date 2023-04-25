@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Array Game Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Array%20Game%20Autoplay.users.js
-// @version      0.6.7
+// @version      0.6.9
 // @description  Autoplays Array Game by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/arrayGame/
@@ -93,7 +93,7 @@ function autobuyA() {
       buyUpgrade(1, i);
     }
 
-    if (game.BUpgradesBought[4].mag === 1) {
+    if (game.BUpgradesBought[4].mag) {
       buyUpgrade(1, 3);
     }
   }
@@ -104,10 +104,10 @@ function autobuyA() {
 }
 
 function autobuyB() {
-  if (game.currentChallenge === 0 || game.currentChallenge === 5) {
+  if (!game.currentChallenge || game.currentChallenge === 5) {
     if (game.DMilestonesReached < 6) {
       for (let i = 1; i < 9; i++) {
-        if (game.BUpgradesBought[i - 1].mag === 0) {
+        if (!game.BUpgradesBought[i - 1].mag) {
           buyUpgrade(2, i);
         }
       }
@@ -119,7 +119,7 @@ function autobuyB() {
 
     // Only buy B generators if we passively gain B or we don't gain enough for it to be worth waiting for
     if (
-      (game.BUpgradesBought[2].mag === 1 || game.array[1].mag < 60) &&
+      (game.BUpgradesBought[2].mag || game.array[1].mag < 60) &&
       game.DMilestonesReached < 7
     ) {
       if (game.DMilestonesReached < 6) {
@@ -133,7 +133,7 @@ function autobuyB() {
 function autobuyC() {
   // Save C for A + B multiplier instead of spending whilst unlocking milestones
   if (
-    game.currentChallenge === 0 &&
+    !game.currentChallenge &&
     ((game.CMilestonesReached >= 6 && game.CGeneratorsBought[0].mag <= 3) ||
       (game.CMilestonesReached >= 8 && game.CGeneratorsBought[0].mag <= 6) ||
       game.CMilestonesReached >= 10)
@@ -144,7 +144,7 @@ function autobuyC() {
 
 function autobuyD() {
   if (
-    game.currentChallenge === 0 &&
+    !game.currentChallenge &&
     ((game.DMilestonesReached >= 5 && game.DGeneratorsBought[0].mag <= 3) ||
       (game.DMilestonesReached >= 8 &&
         !(game.array[3].mag > 1e4 && game.DMilestonesReached < 14) && // if D > 10000, save for 50000 milestone then 200000 milestone
@@ -158,9 +158,9 @@ function autobuyD() {
 function resetForB() {
   // Only prestige if we can actually gain something and if we don't already passively gain B
   if (
-    game.currentChallenge === 0 &&
-    game.BUpgradesBought[2].mag !== 1 &&
-    game.BToGet.mag !== 0 &&
+    !game.currentChallenge &&
+    !game.BUpgradesBought[2].mag &&
+    game.BToGet.mag &&
     game.array[0].gte(1e10)
   ) {
     prestigeConfirm(1);
@@ -170,7 +170,7 @@ function resetForB() {
 function resetForC() {
   // Only prestige if we can actually gain something and if we don't already passively gain C
   if (
-    game.currentChallenge === 0 &&
+    !game.currentChallenge &&
     game.array[1].gte(1e10) &&
     game.CMilestonesReached < 10 &&
     resetScaling.some(cubicPrestigeReqs, [
@@ -186,7 +186,7 @@ function resetForD() {
   // Only prestige if we can actually gain something and if we don't already passively gain D
   // Only reset if all 24 A challenges are done
   if (
-    game.currentChallenge === 0 &&
+    !game.currentChallenge &&
     game.challengesBeaten.slice(0, 4) == "6,6,6,6" &&
     game.array[2].gte(1e10) &&
     game.DMilestonesReached < 8 &&
@@ -209,15 +209,13 @@ function cubicPrestigeReqs(x) {
     this[1] >=
       Math.floor(
         ((1 / 15) * x ** 3 - 1.3 * x ** 2 + (259 / 30) * x - 18) *
-          (this[2] && this[2] === "D"
-            ? 1
-            : game.array[3].pow(0.8).mul(3).add(1))
+          (this[2] ? 1 : game.array[3].pow(0.8).mul(3).add(1))
       )
   );
 }
 
 function startChallenges() {
-  if (game.currentChallenge === 0 && started) {
+  if (!game.currentChallenge && started) {
     for (const [ch, tiers] of Object.entries(challenges)) {
       for (const [tier, reqs] of Object.entries(tiers)) {
         if (
@@ -234,7 +232,7 @@ function startChallenges() {
 }
 
 function completeChallenges() {
-  if (game.currentChallenge !== 0 && started) {
+  if (game.currentChallenge && started) {
     const ch = game.currentChallenge - 1;
     const tier = game.challengesBeaten[ch];
     const goal = new Decimal(challengeGoals[ch][tier]);
