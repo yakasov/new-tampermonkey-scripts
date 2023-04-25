@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Array Game Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Array%20Game%20Autoplay.users.js
-// @version      0.6.6
+// @version      0.6.7
 // @description  Autoplays Array Game by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/arrayGame/
@@ -78,12 +78,12 @@ let challenges = {
   },
   7: {
     // CH-B4: A + B gen prod ^ 0.1
-    1: { CAmount: new Decimal(9e999), DAmount: new Decimal(9e999) },
-    2: { CAmount: new Decimal(9e999), DAmount: new Decimal(9e999) },
-    3: { CAmount: new Decimal(9e999), DAmount: new Decimal(9e999) },
-    4: { CAmount: new Decimal(9e999), DAmount: new Decimal(9e999) },
-    5: { CAmount: new Decimal(9e999), DAmount: new Decimal(9e999) },
-    6: { CAmount: new Decimal(9e999), DAmount: new Decimal(9e999) },
+    1: { CAmount: new Decimal(1e51), DAmount: new Decimal(1e5) },
+    2: { CAmount: new Decimal(1e55), DAmount: new Decimal(4e5) }, // could be lower? affected by D milestone 16
+    3: { CAmount: new Decimal(1e57), DAmount: new Decimal(7e5) }, // could be lower? affected by D milestone 16
+    4: { CAmount: new Decimal(1e64), DAmount: new Decimal(1e6) }, // completes around 1e65 and 2.5e6
+    5: { CAmount: new Decimal(2e68), DAmount: new Decimal(1e6) }, // completes around 6e69 and 9e6
+    6: { CAmount: new Decimal(3e72), DAmount: new Decimal(2e6) }, // completes around 2.3e74 and 8e7
   },
 };
 
@@ -148,7 +148,8 @@ function autobuyD() {
     ((game.DMilestonesReached >= 5 && game.DGeneratorsBought[0].mag <= 3) ||
       (game.DMilestonesReached >= 8 &&
         !(game.array[3].mag > 1e4 && game.DMilestonesReached < 14) && // if D > 10000, save for 50000 milestone then 200000 milestone
-        !(game.array[3].mag > 2.5e5 && game.DMilestonesReached < 15))) // if D > 250000, save for 2.5 mil milestone
+        !(game.array[3].mag > 2.5e5 && game.DMilestonesReached < 15) && // if D > 250000, save for 2.5 mil milestone
+        !(game.array[3].mag > 1e7 && game.DMilestonesReached < 16))) // if D > 10 mil, save for 75 mil milestone
   ) {
     buyMaxGenerators(4, 6);
   }
