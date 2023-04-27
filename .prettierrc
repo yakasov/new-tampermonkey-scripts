@@ -16,7 +16,7 @@
 	"singleQuote": false,
 	"tabWidth": 4,
 	"trailingComma": "es5",
-	"useTabs": true,
+	"useTabs": false,
 	"vueIndentScriptAndStyle": false,
 	"parser": "babel"
 }

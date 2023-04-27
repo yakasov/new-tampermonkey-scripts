@@ -11,6 +11,6 @@
 // ==/UserScript==
 
 waitForKeyElements(
-	"playerzone",
-	document.getElementById("playerzone").remove()
+    "playerzone",
+    document.getElementById("playerzone").remove()
 );
