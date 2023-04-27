@@ -10,4 +10,7 @@
 // @require      https://gist.githubusercontent.com/BrockA/2625891/raw/9c97aa67ff9c5d56be34a55ad6c18a314e5eb548/waitForKeyElements.js
 // ==/UserScript==
 
-waitForKeyElements("playerzone", document.getElementById('playerzone').remove());
+waitForKeyElements(
+	"playerzone",
+	document.getElementById("playerzone").remove()
+);

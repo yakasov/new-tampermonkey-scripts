@@ -9,8 +9,8 @@
 // ==/UserScript==
 
 const classString =
-  "top-level-navigation region-navigation flex-column flex-noshrink scroll-hidden expanded";
+	"top-level-navigation region-navigation flex-column flex-noshrink scroll-hidden expanded";
 waitForKeyElements(
-  classString,
-  document.getElementsByClassName(classString)[0].remove()
+	classString,
+	document.getElementsByClassName(classString)[0].remove()
 );
