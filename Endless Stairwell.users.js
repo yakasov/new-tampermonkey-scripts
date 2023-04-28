@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.3.1
+// @version      0.3.2
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -113,6 +113,14 @@ class mainMovement {
 
     basicAttack() {
         if (game.fightingMonster && game.energy > 15) {
+            if (
+                game.altarUpgradesBought[6] &&
+                game.monsterHealth.gt(game.attackDamage)
+            ) {
+                flee();
+                return moveToStairwell();
+            }
+
             attack();
             if (
                 game.vanillaHoney.gte(1) &&
@@ -124,10 +132,8 @@ class mainMovement {
             }
         } else if (!game.fightingMonster) {
             if (
-                (game.health.lte(game.maxHealth.div(1.8)) &&
-                    game.health.lte(1e5)) ||
-                (game.altarUpgradesBought[6] &&
-                    game.monsterHealth.gt(game.attackDamage))
+                game.health.lte(game.maxHealth.div(1.8)) &&
+                game.health.lte(1e5)
             ) {
                 // go to stairwell if health low
                 toStairwell();
