@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.3.4
+// @version      0.3.5
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -11,6 +11,7 @@
 
 /* eslint-disable no-undef */
 let started = false;
+let prestigeTimesDisplay = 0;
 const runes = [4, 4, 4];
 const blueKeyFloor = 49;
 const sharkShopFloor = 149;
@@ -19,7 +20,13 @@ const prestigeConstant = 1.8;
 
 function setTitleText() {
     let el = document.getElementsByClassName("title-bar-text")[0];
-    el.innerText = `Endless Stairwell - Autoplay ${started ? "ON" : "OFF"}`;
+    let prestigeAt = format(
+        ExpantaNum(prestigeConstant).pow(prestigeTimesDisplay),
+        0
+    );
+    el.innerText = `Endless Stairwell - Autoplay ${
+        started ? "ON" : "OFF"
+    } - Prestige Times ${prestigeTimesDisplay}, Prestige @ ${prestigeAt}`;
 }
 
 class mainFuncs {
@@ -35,6 +42,7 @@ class mainFuncs {
             this.prestigeTimes = Math.floor(
                 Math.pow(game.cocoaHoney, 1 / prestigeConstant)
             );
+            prestigeTimesDisplay = this.prestigeTimes;
         }
     }
 
@@ -283,7 +291,7 @@ function main() {
 
 let s1 = new Section1(0, { 0: 10, 1: 13, 2: 17, 3: Infinity });
 let s2 = new Section2(1, { 0: 40, 1: 55, 2: 80, 3: Infinity });
-let s3 = new Section3(2, { 0: 1e200, 1: 1e400, 2: 1e600, 3: Infinity });
+let s3 = new Section3(2, { 0: 1e200, 1: 1e1000, 2: 1e5000, 3: Infinity });
 
 setInterval(main, 20);
 setTitleText();
