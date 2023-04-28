@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.4.0
+// @version      0.4.1
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -35,19 +35,14 @@ class mainFuncs {
     }
 
     main() {
-        if (cocoaHoneyToGet.gte(game.cocoaHoney.mul(2))) {
+        if (this.shouldCocoaPrestige) {
             this.cocoaPrestigeNoConfirm();
             setTitleText();
         }
 
         this.setFloorTarget();
 
-        if (
-            !this.floorTargetOverride &&
-            game.currentFloor !==
-                game.floorsWithRooms[this.tier][this.floorTarget] &&
-            game.roomsFromStairwell
-        ) {
+        if (this.shouldMoveToStairwell) {
             // move to stairwell if floorTarget has changed
             this.moveToStairwell();
         } else if (this.checkTempRunes && game.level.lte(500)) {
@@ -57,6 +52,23 @@ class mainFuncs {
         } else {
             this.getXP();
         }
+    }
+
+    get shouldCocoaPrestige() {
+        return (
+            (cocoaHoneyToGet.gte(game.cocoaHoney.mul(2)) &&
+                game.cocoaBars < 9) ||
+            cocoaHoneyToGet.gte(cocoaBarRequirements[game.cocoaBars])
+        );
+    }
+
+    get shouldMoveToStairwell() {
+        return (
+            !this.floorTargetOverride &&
+            game.currentFloor !==
+                game.floorsWithRooms[this.tier][this.floorTarget] &&
+            game.roomsFromStairwell
+        );
     }
 
     setFloorTarget() {
@@ -126,6 +138,15 @@ class mainFuncs {
     }
 
     basicAttack() {
+        if (
+            game.fightingMonster &&
+            game.altarUpgradesBought[6] &&
+            game.monsterHealth.gt(game.attackDamage)
+        ) {
+            flee();
+            return toStairwell();
+        }
+
         if (game.fightingMonster && game.energy > 15) {
             attack();
             if (
@@ -252,18 +273,6 @@ class Section3 extends mainFuncs {
         }
     }
 
-    basicAttack() {
-        if (
-            game.fightingMonster &&
-            game.altarUpgradesBought[6] &&
-            game.monsterHealth.gt(game.attackDamage)
-        ) {
-            flee();
-            return toStairwell();
-        }
-        super.basicAttack();
-    }
-
     gainCocoaBarsNoConfirm() {
         // script.js: 2025
         if (game.cocoaHoney.gte(cocoaBarRequirement)) {
@@ -302,7 +311,51 @@ class Section4 extends mainFuncs {
     }
 
     main() {
+        if (game.cocoaBars === 10) {
+            this.darkOrbPrestigeNoConfirm();
+        }
+
         super.main();
+    }
+
+    darkOrbPrestigeNoConfirm() {
+        if (game.cocoaHoney.gte(darkOrbRequirements[game.darkOrbs])) {
+            game.darkOrbs++;
+            darkOrbReset();
+            $("#darkOrbBonuses").html(darkOrbBonuses[game.darkOrbs]);
+            if (game.darkOrbs >= 1) {
+                document.getElementsByClassName(
+                    "cocoaBarMilestoneDiv"
+                )[6].style.display = "inline-block";
+                document.getElementsByClassName(
+                    "cocoaBarMilestoneDiv"
+                )[7].style.display = "inline-block";
+                document.getElementsByClassName(
+                    "cocoaBarMilestoneDiv"
+                )[8].style.display = "inline-block";
+            }
+            if (game.darkOrbs >= 2) {
+                document.getElementsByClassName(
+                    "cocoaBarMilestoneDiv"
+                )[9].style.display = "inline-block";
+                document.getElementsByClassName(
+                    "cocoaBarMilestoneDiv"
+                )[10].style.display = "inline-block";
+                document.getElementsByClassName(
+                    "cocoaBarMilestoneDiv"
+                )[11].style.display = "inline-block";
+            }
+            if (game.darkOrbs >= 4) {
+                document.getElementById("getCocoaBarsButton").disabled = true;
+                setInterval(autoCocoaBars, 100);
+                document.getElementsByClassName(
+                    "cocoaBarMilestoneDiv"
+                )[12].style.display = "inline-block";
+                document.getElementsByClassName(
+                    "cocoaBarMilestoneDiv"
+                )[13].style.display = "inline-block";
+            }
+        }
     }
 }
 
