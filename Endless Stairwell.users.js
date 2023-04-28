@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.3.7
+// @version      0.3.8
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -274,10 +274,11 @@ class Section3 extends mainFuncs {
                 document.getElementById("darkOrbText").style.display = "block";
             }
             for (i = 0; i < cbmRequirements.length; i++) {
-                if (game.cocoaBars >= cbmRequirements[i])
+                if (game.cocoaBars >= cbmRequirements[i]) {
                     document.getElementsByClassName("cocoaBarMilestoneDiv")[
                         i
                     ].style.backgroundColor = "#40d040";
+                }
             }
             if (game.cocoaBars >= 20) {
                 document.getElementById("ringIcon").src = "img/ring3.png";
@@ -296,6 +297,10 @@ class Section3 extends mainFuncs {
 
 function main() {
     if (started) {
+        if ((document.getElementById("deathDiv").style.display = "block")) {
+            deathClose();
+        }
+
         if (!game.specialItemsAcquired[1] || game.level.lte(25)) {
             s1.main();
         } else if (
