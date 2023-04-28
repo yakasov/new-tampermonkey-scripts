@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.2.0
+// @version      0.2.2
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -119,6 +119,13 @@ class Section1 extends mainMovement {
     main() {
         if (game.specialItemsAcquired[0]) {
             getXP(this.tier, 0, blueKeyFloor);
+            if (super.checkRunes) {
+                if (game.roomsFromStairwell) {
+                    moveToStairwell();
+                } else {
+                    getRunes();
+                }
+            }
             return;
         }
 
