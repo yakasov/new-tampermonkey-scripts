@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.3.0
+// @version      0.3.1
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -53,7 +53,7 @@ class mainMovement {
             game.roomsFromStairwell
         ) {
             // move to stairwell if floorTarget has changed
-            moveToStairwell();
+            this.moveToStairwell();
         } else if (this.checkTempRunes) {
             this.getTempRunes();
         } else if (this.checkPermRunes) {
@@ -91,7 +91,7 @@ class mainMovement {
 
     getTempRunes() {
         if (game.roomsFromStairwell) {
-            return moveToStairwell();
+            return this.moveToStairwell();
         }
 
         if (this.moveToFloor(game.smithFloor)) {
@@ -103,7 +103,7 @@ class mainMovement {
 
     getPermRunes(i) {
         if (game.roomsFromStairwell) {
-            return moveToStairwell();
+            return this.moveToStairwell();
         }
 
         if (this.moveToFloor(game.smithFloor + 1)) {
