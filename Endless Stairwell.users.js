@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.3.3
+// @version      0.3.4
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -15,23 +15,31 @@ const runes = [4, 4, 4];
 const blueKeyFloor = 49;
 const sharkShopFloor = 149;
 const cocoaUpgrades = { 1: 6, 3: 5, 4: 40, 5: 115, 6: 600, 7: 2200 };
+const prestigeConstant = 1.8;
 
 function setTitleText() {
     let el = document.getElementsByClassName("title-bar-text")[0];
     el.innerText = `Endless Stairwell - Autoplay ${started ? "ON" : "OFF"}`;
 }
 
-class mainMovement {
+class mainFuncs {
     constructor(tier, targets) {
         this.floorTarget = 0;
         this.tier = tier;
         this.targets = targets; // level must be > (v) to go to difficulty (k + 1)
         this.buffed = false; // use buffed so floorTarget doesn't get incremented more than once
         this.floorTargetOverride = null; // useful for fighting a specific floor eg 49
+        this.prestigeTimes = 0;
+
+        if (game.cocoaHoney.gt(0)) {
+            this.prestigeTimes = Math.floor(
+                Math.pow(game.cocoaHoney, 1 / prestigeConstant)
+            );
+        }
     }
 
     main() {
-        if (cocoaHoneyToGet.gte(1.5 ** this.prestigeTimes)) {
+        if (cocoaHoneyToGet.gte(prestigeConstant ** this.prestigeTimes)) {
             this.cocoaPrestigeNoConfirm();
         }
 
@@ -194,7 +202,7 @@ class mainMovement {
     }
 }
 
-class Section1 extends mainMovement {
+class Section1 extends mainFuncs {
     constructor(tier, targets) {
         super(tier, targets);
     }
@@ -210,11 +218,9 @@ class Section1 extends mainMovement {
     }
 }
 
-class Section2 extends mainMovement {
+class Section2 extends mainFuncs {
     constructor(tier, targets) {
         super(tier, targets);
-        this.lifetimeCocoaHoney = 0;
-        this.prestigeTimes = 0;
     }
 
     main() {
@@ -231,7 +237,7 @@ class Section2 extends mainMovement {
     }
 }
 
-class Section3 extends mainMovement {
+class Section3 extends mainFuncs {
     constructor(tier, targets) {
         super(tier, targets);
     }
