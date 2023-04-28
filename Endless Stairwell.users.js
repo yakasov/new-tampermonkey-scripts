@@ -65,6 +65,7 @@ class mainMovement {
         this.floorTarget = 0;
         this.tier = tier;
         this.targets = targets;
+        this.buffed = false;
     }
 
     main() {
@@ -75,8 +76,11 @@ class mainMovement {
             }
         }
 
-        if (game.buffTimes[0] && this.floorTarget !== 3) {
-            this.floorTarget += 1;
+        if (game.buffTimes[0] && this.floorTarget !== 3 && !this.buffed) {
+            this.floorTarget++;
+            this.buffed = true;
+        } else if (!game.buffTimes[0] && this.buffed) {
+            this.buffed = false;
         }
 
         if (
@@ -145,7 +149,7 @@ let s2 = new mainMovement(1, {
     3: 999,
 });
 
-setInterval(main, 5);
+setInterval(main, 10);
 GM_registerMenuCommand("Toggle autoplay", () => {
     started = !started;
     //setTitleText();
