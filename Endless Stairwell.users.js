@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.3.5
+// @version      0.3.6
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -11,22 +11,17 @@
 
 /* eslint-disable no-undef */
 let started = false;
-let prestigeTimesDisplay = 0;
 const runes = [4, 4, 4];
 const blueKeyFloor = 49;
 const sharkShopFloor = 149;
 const cocoaUpgrades = { 1: 6, 3: 5, 4: 40, 5: 115, 6: 600, 7: 2200 };
-const prestigeConstant = 1.8;
 
 function setTitleText() {
     let el = document.getElementsByClassName("title-bar-text")[0];
-    let prestigeAt = format(
-        ExpantaNum(prestigeConstant).pow(prestigeTimesDisplay),
-        0
-    );
+    let prestigeAt = format(game.cocoaHoney.mul(2), 0);
     el.innerText = `Endless Stairwell - Autoplay ${
         started ? "ON" : "OFF"
-    } - Prestige Times ${prestigeTimesDisplay}, Prestige @ ${prestigeAt}`;
+    } - Prestige @ ${prestigeAt}`;
 }
 
 class mainFuncs {
@@ -36,19 +31,12 @@ class mainFuncs {
         this.targets = targets; // level must be > (v) to go to difficulty (k + 1)
         this.buffed = false; // use buffed so floorTarget doesn't get incremented more than once
         this.floorTargetOverride = null; // useful for fighting a specific floor eg 49
-        this.prestigeTimes = 0;
-
-        if (game.cocoaHoney.gt(0)) {
-            this.prestigeTimes = Math.floor(
-                Math.pow(game.cocoaHoney, 1 / prestigeConstant)
-            );
-            prestigeTimesDisplay = this.prestigeTimes;
-        }
     }
 
     main() {
-        if (cocoaHoneyToGet.gte(prestigeConstant ** this.prestigeTimes)) {
+        if (cocoaHoneyToGet.gte(game.cocoaHoney.mul(2))) {
             this.cocoaPrestigeNoConfirm();
+            setTitleText();
         }
 
         this.setFloorTarget();
@@ -204,7 +192,6 @@ class mainFuncs {
         if (cocoaHoneyToGet.gt(0)) {
             game.cocoaHoney = game.cocoaHoney.add(cocoaHoneyToGet);
             this.lifetimeCocoaHoney += cocoaHoneyToGet;
-            this.prestigeTimes++;
             cocoaReset();
         }
     }
