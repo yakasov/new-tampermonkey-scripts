@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.3.2
+// @version      0.3.3
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -13,6 +13,7 @@
 let started = false;
 const runes = [4, 4, 4];
 const blueKeyFloor = 49;
+const sharkShopFloor = 149;
 const cocoaUpgrades = { 1: 6, 3: 5, 4: 40, 5: 115, 6: 600, 7: 2200 };
 
 function setTitleText() {
@@ -30,6 +31,30 @@ class mainMovement {
     }
 
     main() {
+        if (cocoaHoneyToGet.gte(1.5 ** this.prestigeTimes)) {
+            this.cocoaPrestigeNoConfirm();
+        }
+
+        this.setFloorTarget();
+
+        if (
+            !this.floorTargetOverride &&
+            game.currentFloor !==
+                game.floorsWithRooms[this.tier][this.floorTarget] &&
+            game.roomsFromStairwell
+        ) {
+            // move to stairwell if floorTarget has changed
+            this.moveToStairwell();
+        } else if (this.checkTempRunes && game.level.lte(500)) {
+            this.getTempRunes();
+        } else if (this.checkPermRunes && game.level.lte(500)) {
+            this.getPermRunes(this.checkPermRunes);
+        } else {
+            this.getXP();
+        }
+    }
+
+    setFloorTarget() {
         for (const [k, v] of Object.entries(this.targets)) {
             if (game.level.lt(v)) {
                 this.floorTarget = k;
@@ -44,22 +69,6 @@ class mainMovement {
             this.buffed = true;
         } else if (!game.buffTimes[0] && this.buffed) {
             this.buffed = false;
-        }
-
-        if (
-            !this.floorTargetOverride &&
-            game.currentFloor !==
-                game.floorsWithRooms[this.tier][this.floorTarget] &&
-            game.roomsFromStairwell
-        ) {
-            // move to stairwell if floorTarget has changed
-            this.moveToStairwell();
-        } else if (this.checkTempRunes) {
-            this.getTempRunes();
-        } else if (this.checkPermRunes) {
-            this.getPermRunes(this.checkPermRunes);
-        } else {
-            this.getXP();
         }
     }
 
@@ -113,14 +122,6 @@ class mainMovement {
 
     basicAttack() {
         if (game.fightingMonster && game.energy > 15) {
-            if (
-                game.altarUpgradesBought[6] &&
-                game.monsterHealth.gt(game.attackDamage)
-            ) {
-                flee();
-                return moveToStairwell();
-            }
-
             attack();
             if (
                 game.vanillaHoney.gte(1) &&
@@ -181,6 +182,16 @@ class mainMovement {
             this.basicAttack();
         }
     }
+
+    cocoaPrestigeNoConfirm() {
+        // script.js: 1570
+        if (cocoaHoneyToGet.gt(0)) {
+            game.cocoaHoney = game.cocoaHoney.add(cocoaHoneyToGet);
+            this.lifetimeCocoaHoney += cocoaHoneyToGet;
+            this.prestigeTimes++;
+            cocoaReset();
+        }
+    }
 }
 
 class Section1 extends mainMovement {
@@ -207,26 +218,8 @@ class Section2 extends mainMovement {
     }
 
     main() {
-        if (
-            cocoaHoneyToGet.gte(
-                this.prestigeTimes > 5 ? 32 : 2 ** this.prestigeTimes
-            )
-        ) {
-            this.cocoaPrestigeNoConfirm();
-        }
-
         this.buyAltarUpgrades();
         super.main();
-    }
-
-    cocoaPrestigeNoConfirm() {
-        // script.js: 1570
-        if (cocoaHoneyToGet.gt(0)) {
-            game.cocoaHoney = game.cocoaHoney.add(cocoaHoneyToGet);
-            this.lifetimeCocoaHoney += cocoaHoneyToGet;
-            this.prestigeTimes++;
-            cocoaReset();
-        }
     }
 
     buyAltarUpgrades() {
@@ -244,7 +237,26 @@ class Section3 extends mainMovement {
     }
 
     main() {
+        this.buySharkUpgrades();
         super.main();
+    }
+
+    buySharkUpgrades() {
+        for (let i = 2; i < 12; i++) {
+            buySharkUpgrade(i);
+        }
+    }
+
+    basicAttack() {
+        if (
+            game.fightingMonster &&
+            game.altarUpgradesBought[6] &&
+            game.monsterHealth.gt(game.attackDamage)
+        ) {
+            flee();
+            return toStairwell();
+        }
+        super.basicAttack();
     }
 }
 
@@ -252,7 +264,10 @@ function main() {
     if (started) {
         if (!game.specialItemsAcquired[1] || game.level.lte(25)) {
             s1.main();
-        } else if (!game.altarUpgradesBought[6] && game.cocoaHoney.lte(2e4)) {
+        } else if (
+            (!game.altarUpgradesBought[6] && game.cocoaHoney.lte(2e4)) ||
+            game.level.lte(1e100)
+        ) {
             s2.main();
         } else {
             s3.main();
