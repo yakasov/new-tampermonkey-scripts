@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.3.6
+// @version      0.3.7
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -239,6 +239,9 @@ class Section3 extends mainFuncs {
 
     main() {
         this.buySharkUpgrades();
+        if (game.cocoaBars < 10) {
+            this.gainCocoaBarsNoConfirm();
+        }
         super.main();
     }
 
@@ -258,6 +261,36 @@ class Section3 extends mainFuncs {
             return toStairwell();
         }
         super.basicAttack();
+    }
+
+    gainCocoaBarsNoConfirm() {
+        // script.js: 2025
+        if (game.cocoaHoney.gte(cocoaBarRequirement)) {
+            game.cocoaBars++;
+            cocoaReset();
+            game.cocoaHoney = ExpantaNum(0);
+            if (game.cocoaBars >= 10) {
+                document.getElementById("darkOrbIcon").style.display = "block";
+                document.getElementById("darkOrbText").style.display = "block";
+            }
+            for (i = 0; i < cbmRequirements.length; i++) {
+                if (game.cocoaBars >= cbmRequirements[i])
+                    document.getElementsByClassName("cocoaBarMilestoneDiv")[
+                        i
+                    ].style.backgroundColor = "#40d040";
+            }
+            if (game.cocoaBars >= 20) {
+                document.getElementById("ringIcon").src = "img/ring3.png";
+                document.getElementById("hyperplasmIcon").style.display =
+                    "block";
+                document.getElementById("hyperplasmText").style.display =
+                    "block";
+                document.getElementById("darkBarIcon").style.display = "block";
+                document.getElementById("darkBarText").style.display = "block";
+                document.getElementById("starBarIcon").style.display = "block";
+                document.getElementById("starBarText").style.display = "block";
+            }
+        }
     }
 }
 
