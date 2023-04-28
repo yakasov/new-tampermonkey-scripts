@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.2.4
+// @version      0.3.0
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -13,72 +13,7 @@
 let started = false;
 const runes = [4, 4, 4];
 const blueKeyFloor = 49;
-const cocoaUpgrades = {
-    1: 6,
-    3: 5,
-    4: 40,
-    5: 115,
-    6: 600,
-    7: 2200,
-};
-
-function moveToFloor(floor, enter = false) {
-    if (game.currentFloor > floor) {
-        floorDown();
-        return false;
-    } else if (game.currentFloor < floor) {
-        floorUp();
-        return false;
-    }
-
-    if (enter && !game.roomsFromStairwell) {
-        if (game.energy !== 100) {
-            return false;
-        }
-        enterFloor();
-    }
-    return true;
-}
-
-function moveToStairwell() {
-    if (game.fightingMonster) {
-        basicAttack();
-    } else {
-        toStairwell();
-    }
-}
-
-function getXP(tier, target, floor = null) {
-    if (moveToFloor(floor ?? game.floorsWithRooms[tier][target], true)) {
-        basicAttack();
-    }
-}
-
-function basicAttack() {
-    if (game.fightingMonster && game.energy > 15) {
-        attack();
-        if (
-            game.vanillaHoney.gte(1) &&
-            game.energy < 25 &&
-            !game.altarUpgradesBought[2]
-        ) {
-            // consume vanilla honey for energy
-            consumeHoney(2);
-        }
-    } else if (!game.fightingMonster) {
-        if (game.health.lte(game.maxHealth.div(2))) {
-            // go to stairwell if health low
-            toStairwell();
-        } else if (game.energy === 100) {
-            // only move on if energy maxed again
-            newRoom();
-        }
-    }
-}
-
-function getSpecialItems() {
-    return game.specialItemsAcquired;
-}
+const cocoaUpgrades = { 1: 6, 3: 5, 4: 40, 5: 115, 6: 600, 7: 2200 };
 
 function setTitleText() {
     let el = document.getElementsByClassName("title-bar-text")[0];
@@ -112,10 +47,10 @@ class mainMovement {
         }
 
         if (
+            !this.floorTargetOverride &&
             game.currentFloor !==
                 game.floorsWithRooms[this.tier][this.floorTarget] &&
-            game.roomsFromStairwell &&
-            !this.floorTargetOverride
+            game.roomsFromStairwell
         ) {
             // move to stairwell if floorTarget has changed
             moveToStairwell();
@@ -124,7 +59,7 @@ class mainMovement {
         } else if (this.checkPermRunes) {
             this.getPermRunes(this.checkPermRunes);
         } else {
-            getXP(this.tier, this.floorTarget, this.floorTargetOverride);
+            this.getXP();
         }
     }
 
@@ -159,7 +94,7 @@ class mainMovement {
             return moveToStairwell();
         }
 
-        if (moveToFloor(game.smithFloor)) {
+        if (this.moveToFloor(game.smithFloor)) {
             for (let i = 1; i < 4; i++) {
                 smithRune(i);
             }
@@ -171,8 +106,73 @@ class mainMovement {
             return moveToStairwell();
         }
 
-        if (moveToFloor(game.smithFloor + 1)) {
+        if (this.moveToFloor(game.smithFloor + 1)) {
             smithPermaRune(i);
+        }
+    }
+
+    basicAttack() {
+        if (game.fightingMonster && game.energy > 15) {
+            attack();
+            if (
+                game.vanillaHoney.gte(1) &&
+                game.energy < 25 &&
+                !game.altarUpgradesBought[2]
+            ) {
+                // consume vanilla honey for energy
+                consumeHoney(2);
+            }
+        } else if (!game.fightingMonster) {
+            if (
+                (game.health.lte(game.maxHealth.div(1.8)) &&
+                    game.health.lte(1e5)) ||
+                (game.altarUpgradesBought[6] &&
+                    game.monsterHealth.gt(game.attackDamage))
+            ) {
+                // go to stairwell if health low
+                toStairwell();
+            } else if (game.energy === 100) {
+                // only move on if energy maxed again
+                newRoom();
+            }
+        }
+    }
+
+    moveToFloor(floor, enter = false) {
+        if (game.currentFloor > floor) {
+            floorDown();
+            return false;
+        } else if (game.currentFloor < floor) {
+            floorUp();
+            return false;
+        }
+
+        if (enter && !game.roomsFromStairwell) {
+            if (game.energy !== 100) {
+                return false;
+            }
+            enterFloor();
+        }
+        return true;
+    }
+
+    moveToStairwell() {
+        if (game.fightingMonster) {
+            this.basicAttack();
+        } else {
+            toStairwell();
+        }
+    }
+
+    getXP() {
+        if (
+            this.moveToFloor(
+                this.floorTargetOverride ??
+                    game.floorsWithRooms[this.tier][this.floorTarget],
+                true
+            )
+        ) {
+            this.basicAttack();
         }
     }
 }
@@ -185,6 +185,8 @@ class Section1 extends mainMovement {
     main() {
         if (game.specialItemsAcquired[0] && game.level.gte(15)) {
             this.floorTargetOverride = blueKeyFloor;
+        } else {
+            this.floorTargetOverride = null;
         }
 
         super.main();
@@ -199,7 +201,11 @@ class Section2 extends mainMovement {
     }
 
     main() {
-        if (cocoaHoneyToGet.gte(2 ** this.prestigeTimes)) {
+        if (
+            cocoaHoneyToGet.gte(
+                this.prestigeTimes > 5 ? 32 : 2 ** this.prestigeTimes
+            )
+        ) {
             this.cocoaPrestigeNoConfirm();
         }
 
@@ -226,28 +232,31 @@ class Section2 extends mainMovement {
     }
 }
 
+class Section3 extends mainMovement {
+    constructor(tier, targets) {
+        super(tier, targets);
+    }
+
+    main() {
+        super.main();
+    }
+}
+
 function main() {
     if (started) {
-        if (!getSpecialItems()[1] || game.level.lte(25)) {
+        if (!game.specialItemsAcquired[1] || game.level.lte(25)) {
             s1.main();
-        } else {
+        } else if (!game.altarUpgradesBought[6] && game.cocoaHoney.lte(2e4)) {
             s2.main();
+        } else {
+            s3.main();
         }
     }
 }
 
-let s1 = new Section1(0, {
-    0: 10,
-    1: 13,
-    2: 17,
-    3: 999,
-});
-let s2 = new Section2(1, {
-    0: 40,
-    1: 55,
-    2: 80,
-    3: 999,
-});
+let s1 = new Section1(0, { 0: 10, 1: 13, 2: 17, 3: Infinity });
+let s2 = new Section2(1, { 0: 40, 1: 55, 2: 80, 3: Infinity });
+let s3 = new Section3(2, { 0: 1e200, 1: 1e400, 2: 1e600, 3: Infinity });
 
 setInterval(main, 20);
 setTitleText();
