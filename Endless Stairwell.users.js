@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.3.8
+// @version      0.4.0
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -15,6 +15,7 @@ const runes = [4, 4, 4];
 const blueKeyFloor = 49;
 const sharkShopFloor = 149;
 const cocoaUpgrades = { 1: 6, 3: 5, 4: 40, 5: 115, 6: 600, 7: 2200 };
+const fStop = ExpantaNum("10^^11");
 
 function setTitleText() {
     let el = document.getElementsByClassName("title-bar-text")[0];
@@ -295,6 +296,16 @@ class Section3 extends mainFuncs {
     }
 }
 
+class Section4 extends mainFuncs {
+    constructor(tier, targets) {
+        super(tier, targets);
+    }
+
+    main() {
+        super.main();
+    }
+}
+
 function main() {
     if (started) {
         if ((document.getElementById("deathDiv").style.display = "block")) {
@@ -308,8 +319,10 @@ function main() {
             game.level.lte(1e100)
         ) {
             s2.main();
-        } else {
+        } else if (game.level.lt(fStop)) {
             s3.main();
+        } else {
+            s4.main();
         }
     }
 }
@@ -317,6 +330,12 @@ function main() {
 let s1 = new Section1(0, { 0: 10, 1: 13, 2: 17, 3: Infinity });
 let s2 = new Section2(1, { 0: 40, 1: 55, 2: 80, 3: Infinity });
 let s3 = new Section3(2, { 0: 1e200, 1: 1e1000, 2: 1e5000, 3: Infinity });
+let s4 = new Section4(3, {
+    0: "10^^25",
+    1: "10^^50",
+    2: "10^^75",
+    3: Infinity,
+});
 
 setInterval(main, 20);
 setTitleText();
