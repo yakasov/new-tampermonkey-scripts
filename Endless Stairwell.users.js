@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.6.2
+// @version      0.6.3
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -61,7 +61,8 @@ class mainFuncs {
     get shouldCocoaPrestige() {
         return (
             (cocoaHoneyToGet.gte(game.cocoaHoney.mul(2)) &&
-                game.cocoaBars < 9) ||
+                game.cocoaBars < 9 &&
+                game.cocoaHoney.lte("10^^10")) ||
             (cocoaHoneyToGet.gte(cocoaBarRequirements[game.cocoaBars]) &&
                 game.cocoaHoney.lt(cocoaBarRequirements[game.cocoaBars])) ||
             (game.cocoaBars >= 19 && game.cocoaHoney.lte("10^^^25")) ||
@@ -174,8 +175,11 @@ class mainFuncs {
             ) {
                 // go to stairwell if health low
                 toStairwell();
-            } else if (game.energy === 100) {
-                // only move on if energy maxed again
+            } else if (
+                game.energy === 100 ||
+                game.attackDamage.gt(game.monsterMaxHealth)
+            ) {
+                // only move on if energy maxed again or if we can kill in one hit
                 newRoom();
             }
         }
@@ -524,6 +528,8 @@ document.addEventListener("keypress", (event) => {
     ) {
         debugRunOnce = true;
         previousKey = pressedKey;
+    } else if (pressedKey == 99) {
+        started = !started;
     }
 });
 
