@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.5.2
+// @version      0.6.0
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -11,6 +11,7 @@
 
 /* eslint-disable no-undef */
 let started = false;
+let currentSection = 0;
 const runes = [4, 4, 4];
 const blueKeyFloor = 49;
 const sharkShopFloor = 149;
@@ -22,7 +23,7 @@ function setTitleText() {
     let prestigeAt = format(game.cocoaHoney.mul(2), 0);
     el.innerText = `Endless Stairwell - Autoplay ${
         started ? "ON" : "OFF"
-    } - Prestige @ ${prestigeAt}`;
+    } - Prestige @ ${prestigeAt} - Section ${currentSection}`;
 }
 
 class mainFuncs {
@@ -37,7 +38,6 @@ class mainFuncs {
     main() {
         if (this.shouldCocoaPrestige) {
             this.cocoaPrestigeNoConfirm();
-            setTitleText();
         }
 
         this.setFloorTarget();
@@ -60,7 +60,7 @@ class mainFuncs {
                 game.cocoaBars < 9) ||
             (cocoaHoneyToGet.gte(cocoaBarRequirements[game.cocoaBars]) &&
                 game.cocoaHoney.lt(cocoaBarRequirements[game.cocoaBars])) ||
-            game.cocoaHoney.lte("10^^^25") ||
+            (game.cocoaBars >= 19 && game.cocoaHoney.lte("10^^^25")) ||
             (game.cocoaHoney.eq(0) && game.level.gte(500))
         );
     }
@@ -323,6 +323,7 @@ class Section3 extends mainFuncs {
     main() {
         this.buySharkUpgrades();
         this.gainCocoaBarsNoConfirm();
+
         super.main();
     }
 
@@ -429,7 +430,8 @@ class Section5 extends Section4 {
 
     get shouldCocoaPrestige() {
         return (
-            (game.roomsExplored >= 500 && game.hyperplasm.eq(0)) ||
+            game.cocoaHoney.eq(0) ||
+            (game.roomsExplored >= 500 && game.cocoaHoney.lt("10^^^10^^2")) ||
             (cocoaHoneyToGet.gte(darkOrbRequirements[game.darkOrbs]) &&
                 game.cocoaHoney.lt(darkOrbRequirements[game.darkOrbs]))
         );
@@ -448,6 +450,16 @@ class Section5 extends Section4 {
     }
 }
 
+class Section6 extends Section4 {
+    constructor(tier, targets) {
+        super(tier, targets);
+    }
+
+    main() {
+        //super.main();
+    }
+}
+
 function main() {
     if (started) {
         if ((document.getElementById("deathDiv").style.display = "block")) {
@@ -455,18 +467,26 @@ function main() {
         }
 
         if (!game.specialItemsAcquired[1] || game.level.lte(25)) {
+            currentSection = 1;
             s1.main();
         } else if (
             (!game.altarUpgradesBought[6] && game.cocoaHoney.lte(2e4)) ||
             game.level.lte(1e100)
         ) {
+            currentSection = 2;
             s2.main();
-        } else if (game.level.lt(fStop) || game.cocoaBars < 10) {
+        } else if (game.cocoaBars < 10 && !game.sharkUpgradesBought[9]) {
+            currentSection = 3;
             s3.main();
         } else if (game.cocoaBars < 20) {
+            currentSection = 4;
             s4.main();
-        } else {
+        } else if (game.cocoaBars < 25) {
+            currentSection = 5;
             s5.main();
+        } else {
+            currentSection = 6;
+            s6.main();
         }
     }
 }
@@ -481,15 +501,15 @@ let s4 = new Section4(3, {
     3: Infinity,
 });
 let s5 = new Section5(4, {
-    0: "10^^^1000000",
-    1: "10^^^^2",
-    2: "10^^^^3",
+    0: "10^^^10000000",
+    1: "10^^^^3",
+    2: "10^^^10^^3",
     3: Infinity,
 });
+let s6 = newSection6(5, {});
 
 setInterval(main, 20);
-setTitleText();
+setInterval(setTitleText, 250);
 GM_registerMenuCommand("Toggle autoplay", () => {
     started = !started;
-    setTitleText();
 });
