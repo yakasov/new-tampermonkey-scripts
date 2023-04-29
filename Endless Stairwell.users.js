@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.4.2
+// @version      0.4.3
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -175,6 +175,8 @@ class mainFuncs {
     }
 
     moveToFloor(floor, enter = false) {
+        this.fastTravel(floor);
+
         if (game.currentFloor > floor) {
             floorDown();
             return false;
@@ -189,6 +191,7 @@ class mainFuncs {
             }
             enterFloor();
         }
+
         return true;
     }
 
@@ -197,6 +200,37 @@ class mainFuncs {
             this.basicAttack();
         } else {
             toStairwell();
+        }
+    }
+
+    fastTravel(floor) {
+        if (
+            floor >= 1 &&
+            floor <= 25 &&
+            game.currentFloor > 25 &&
+            game.altarUpgradesBought[4]
+        ) {
+            toGroundFloor();
+        } else if (
+            floor >= 26 &&
+            floor <= 75 &&
+            (game.currentFloor < 25 || game.currentFloor > 75) &&
+            game.altarUpgradesBought[4]
+        ) {
+            toFloor49();
+        } else if (
+            floor >= 76 &&
+            floor <= 125 &&
+            (game.currentFloor < 75 || game.currentFloor > 125) &&
+            game.altarUpgradesBought[4]
+        ) {
+            toFloor99();
+        } else if (
+            floor >= 126 &&
+            game.currentFloor < 125 &&
+            game.sharkUpgradesBought[2]
+        ) {
+            toFloor149();
         }
     }
 
