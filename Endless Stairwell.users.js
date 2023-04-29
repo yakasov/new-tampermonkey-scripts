@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.8.0
+// @version      0.8.1
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -10,15 +10,15 @@
 // ==/UserScript==
 
 /* eslint-disable no-undef */
+/* eslint-disable no-loss-of-precision */
+
 let started = false;
 let currentSection = 0;
 let nanMonsters = 0;
 const runes = [4, 4, 4];
 const blueKeyFloor = 49;
-const sharkShopFloor = 149;
 const eelFloor = 303;
 const cocoaUpgrades = { 1: 6, 3: 5, 4: 40, 5: 115, 6: 600, 7: 2200 };
-const fStop = ExpantaNum("10^^11");
 const combinator2Upgrades = {
     2: "J110",
     3: "J300",
@@ -51,9 +51,7 @@ function setTitleText() {
     let blood = format(game.monsterBlood, 0);
     el.innerText = `Endless Stairwell - Autoplay ${
         started ? "ON" : "OFF"
-    } - Prestige @ ${prestigeAt} - Section ${currentSection} - Last Key ${previousKey} - Pressed Key ${pressedKey} - Next Eel ${nextEel} - Blood ${blood} - Eel Farm Floor ${
-        game.floorsWithRooms[5][3]
-    } - NaN Monsters ${nanMonsters}`;
+    } - Prestige @ ${prestigeAt} - Section ${currentSection} - Last Key ${previousKey} - Pressed Key ${pressedKey} - Next Eel ${nextEel} - Blood ${blood} - NaN Monsters ${nanMonsters}`;
 }
 
 class mainFuncs {
@@ -593,7 +591,7 @@ function main() {
             debugRunOnce = false;
         }
 
-        if ((document.getElementById("deathDiv").style.display = "block")) {
+        if (document.getElementById("deathDiv").style.display == "block") {
             deathClose();
         }
 
@@ -648,7 +646,7 @@ let s6 = new Section6(5, {
     2: "J80",
     3: Infinity,
 });
-let s7 = new Section7(6, {});
+let s7 = new Section7(6, {}); // section 7 is special and only has one monster floor, so no targets
 
 document.addEventListener("keypress", (event) => {
     pressedKey = event.keyCode;

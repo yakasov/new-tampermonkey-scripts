@@ -8,6 +8,8 @@
 // @grant        none
 // ==/UserScript==
 
+/* eslint-disable no-undef */
+
 const classString =
     "top-level-navigation region-navigation flex-column flex-noshrink scroll-hidden expanded";
 waitForKeyElements(
