@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.7.1
+// @version      0.8.0
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -12,9 +12,11 @@
 /* eslint-disable no-undef */
 let started = false;
 let currentSection = 0;
+let nanMonsters = 0;
 const runes = [4, 4, 4];
 const blueKeyFloor = 49;
 const sharkShopFloor = 149;
+const eelFloor = 303;
 const cocoaUpgrades = { 1: 6, 3: 5, 4: 40, 5: 115, 6: 600, 7: 2200 };
 const fStop = ExpantaNum("10^^11");
 const combinator2Upgrades = {
@@ -27,6 +29,16 @@ const combinator2Upgrades = {
     9: "J100000",
     10: "J1e29",
 };
+const bloodUpgrades = {
+    0: "J1e44",
+    1: "J1e55",
+    2: "J1e69",
+    3: "J1e87",
+    4: "J1e100",
+    5: "J1e122",
+    6: "J1e420",
+    7: "Je1e100",
+};
 
 let previousKey = 0;
 let pressedKey = 0;
@@ -35,9 +47,13 @@ let debugRunOnce = false;
 function setTitleText() {
     let el = document.getElementsByClassName("title-bar-text")[0];
     let prestigeAt = format(game.cocoaHoney.mul(2), 0);
+    let nextEel = format(ExpantaNum(gemEelLevels[game.gemEelsBeaten]), 0);
+    let blood = format(game.monsterBlood, 0);
     el.innerText = `Endless Stairwell - Autoplay ${
         started ? "ON" : "OFF"
-    } - Prestige @ ${prestigeAt} - Section ${currentSection} - Last Key ${previousKey} - Pressed Key ${pressedKey}`;
+    } - Prestige @ ${prestigeAt} - Section ${currentSection} - Last Key ${previousKey} - Pressed Key ${pressedKey} - Next Eel ${nextEel} - Blood ${blood} - Eel Farm Floor ${
+        game.floorsWithRooms[5][3]
+    } - NaN Monsters ${nanMonsters}`;
 }
 
 class mainFuncs {
@@ -50,6 +66,22 @@ class mainFuncs {
     }
 
     main() {
+        if (!game.floorDifficulty && game.fightingMonster) {
+            // sometimes, I don't know how, it can get stuck in a fight against a NaN health monster
+            // obviously it's impossible to beat so just 'cheat' a bit and exit the fight and go to the stairwell
+            // once I figure it out I'll work around it properly
+            //
+            // they only occur in section 7, at floor ~290 (the top difficulty for tier 6)
+            // the floor difficulty is set to 0 for some reason, I dunno
+            nanMonsters++;
+            game.fightingMonster = false;
+            toStairwell();
+        } else if (game.roomsExplored >= 3000) {
+            // similiarly the automation breaks at room ~4000. again I have no clue why
+            // probably just the way the health is increasing or something
+            toStairwell();
+        }
+
         if (this.shouldCocoaPrestige) {
             this.cocoaPrestigeNoConfirm();
         }
@@ -494,13 +526,64 @@ class Section6 extends Section5 {
     }
 }
 
-class Section7 extends Section6 {
+class Section7 extends Section5 {
     constructor(tier, targets) {
         super(tier, targets);
     }
 
     main() {
-        //super.main();
+        if (game.energy < 100) {
+            consumeHoney(2);
+        }
+        this.buyBloodUpgrades();
+        this.buyBloodProducers();
+        super.main();
+    }
+
+    get shouldCocoaPrestige() {
+        if (game.roomsExplored >= 500) {
+            return true;
+        }
+
+        for (const [k, v] of Object.entries(bloodUpgrades)) {
+            if (cocoaHoneyToGet.gte(v) && !game.monsterBloodUpgradesBought[k]) {
+                return true;
+            }
+        }
+
+        return super.shouldCocoaPrestige;
+    }
+
+    buyBloodUpgrades() {
+        for (let i = 1; i < 11; i++) {
+            buyMonsterBloodUpgrade(i);
+        }
+    }
+
+    buyBloodProducers() {
+        for (let i = 1; i < 7; i++) {
+            buyBloodProducer(i);
+        }
+    }
+
+    basicAttack() {
+        if (
+            game.attackDamage.gt(ExpantaNum(gemEelLevels[game.gemEelsBeaten]))
+        ) {
+            this.floorTargetOverride = eelFloor;
+            if (super.moveToFloor(eelFloor, true)) {
+                if (game.attackDamage.gt(game.monsterMaxHealth)) {
+                    attack();
+                } else {
+                    flee();
+                }
+            }
+        } else {
+            this.floorTargetOverride = game.floorsWithRooms[5][3];
+            if (super.moveToFloor(game.floorsWithRooms[5][3], true)) {
+                super.basicAttack();
+            }
+        }
     }
 }
 
@@ -535,9 +618,11 @@ function main() {
         } else if (!game.combinatorUpgrades2Bought[10]) {
             currentSection = 6;
             s6.main();
-        } else {
+        } else if (!game.monsterBloodUpgradesBought[9]) {
             currentSection = 7;
             s7.main();
+        } else {
+            currentSection = 8;
         }
     }
 }
