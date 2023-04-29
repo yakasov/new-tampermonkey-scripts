@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.4.3
+// @version      0.5.0
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -58,7 +58,9 @@ class mainFuncs {
         return (
             (cocoaHoneyToGet.gte(game.cocoaHoney.mul(2)) &&
                 game.cocoaBars < 9) ||
-            cocoaHoneyToGet.gte(cocoaBarRequirements[game.cocoaBars]) ||
+            (cocoaHoneyToGet.gte(cocoaBarRequirements[game.cocoaBars]) &&
+                game.cocoaHoney.lt(cocoaBarRequirements[game.cocoaBars])) ||
+            game.cocoaHoney.lte("10^^^25") ||
             (game.cocoaHoney.eq(0) && game.level.gte(500))
         );
     }
@@ -149,17 +151,18 @@ class mainFuncs {
             return toStairwell();
         }
 
+        if (
+            (game.vanillaHoney.gte(1) &&
+                game.energy < 25 &&
+                !game.altarUpgradesBought[2]) ||
+            game.vanillaHoney.gte(2500)
+        ) {
+            // consume vanilla honey for energy
+            consumeHoney(2);
+        }
+
         if (game.fightingMonster && game.energy > 15) {
             attack();
-            if (
-                (game.vanillaHoney.gte(1) &&
-                    game.energy < 25 &&
-                    !game.altarUpgradesBought[2]) ||
-                game.vanillaHoney.gte(2500)
-            ) {
-                // consume vanilla honey for energy
-                consumeHoney(2);
-            }
         } else if (!game.fightingMonster) {
             if (
                 game.health.lte(game.maxHealth.div(1.8)) &&
@@ -227,10 +230,31 @@ class mainFuncs {
             toFloor99();
         } else if (
             floor >= 126 &&
-            game.currentFloor < 125 &&
+            floor <= 200 &&
+            (game.currentFloor < 125 || game.currentFloor > 200) &&
             game.sharkUpgradesBought[2]
         ) {
             toFloor149();
+        } else if (
+            floor >= 201 &&
+            floor <= 275 &&
+            (game.currentFloor < 200 || game.currentFloor > 275) &&
+            game.combinatorUpgradesBought[2]
+        ) {
+            toFloor249();
+        } else if (
+            floor >= 276 &&
+            floor <= 325 &&
+            (game.currentFloor < 275 || game.currentFloor > 325) &&
+            game.combinatorUpgrades2Bought[4]
+        ) {
+            toFloor249();
+        } else if (
+            floor >= 326 &&
+            game.currentFloor < 325 &&
+            game.goldenUpgradesBought[0]
+        ) {
+            toFloor249();
         }
     }
 
@@ -392,6 +416,34 @@ class Section4 extends Section3 {
     }
 }
 
+class Section5 extends mainFuncs {
+    constructor(tier, targets) {
+        super(tier, targets);
+    }
+
+    main() {
+        this.combinate();
+        this.buyCombinatorUpgrades();
+        super.main();
+    }
+
+    get shouldCocoaPrestige() {
+        return game.roomsExplored >= 500;
+    }
+
+    combinate() {
+        for (let i = 1; i < 4; i++) {
+            combinate(i);
+        }
+    }
+
+    buyCombinatorUpgrades() {
+        for (let i = 1; i < 11; i++) {
+            buyCombinatorUpgrade(i);
+        }
+    }
+}
+
 function main() {
     if (started) {
         if ((document.getElementById("deathDiv").style.display = "block")) {
@@ -405,10 +457,12 @@ function main() {
             game.level.lte(1e100)
         ) {
             s2.main();
-        } else if (game.level.lt(fStop)) {
+        } else if (game.level.lt(fStop) || game.cocoaBars < 10) {
             s3.main();
-        } else {
+        } else if (game.cocoaBars < 20) {
             s4.main();
+        } else {
+            s5.main();
         }
     }
 }
@@ -420,6 +474,12 @@ let s4 = new Section4(3, {
     0: "10^^25",
     1: "10^^50",
     2: "10^^75",
+    3: Infinity,
+});
+let s5 = new Section5(4, {
+    0: "10^^^^2",
+    1: "10^^^^3",
+    2: "10^^^^5",
     3: Infinity,
 });
 
