@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.4.1
+// @version      0.4.2
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -58,7 +58,8 @@ class mainFuncs {
         return (
             (cocoaHoneyToGet.gte(game.cocoaHoney.mul(2)) &&
                 game.cocoaBars < 9) ||
-            cocoaHoneyToGet.gte(cocoaBarRequirements[game.cocoaBars])
+            cocoaHoneyToGet.gte(cocoaBarRequirements[game.cocoaBars]) ||
+            (game.cocoaHoney.eq(0) && game.level.gte(500))
         );
     }
 
@@ -69,24 +70,6 @@ class mainFuncs {
                 game.floorsWithRooms[this.tier][this.floorTarget] &&
             game.roomsFromStairwell
         );
-    }
-
-    setFloorTarget() {
-        for (const [k, v] of Object.entries(this.targets)) {
-            if (game.level.lt(v)) {
-                this.floorTarget = k;
-                break;
-            }
-        }
-
-        if (game.buffTimes[0] && this.floorTarget !== 3 && !this.buffed) {
-            // if we have the temp buffs, increase the floor target
-            // this should probably only be for floors up to 50
-            this.floorTarget++;
-            this.buffed = true;
-        } else if (!game.buffTimes[0] && this.buffed) {
-            this.buffed = false;
-        }
     }
 
     get checkTempRunes() {
@@ -115,6 +98,24 @@ class mainFuncs {
         return false;
     }
 
+    setFloorTarget() {
+        for (const [k, v] of Object.entries(this.targets)) {
+            if (game.level.lt(v)) {
+                this.floorTarget = k;
+                break;
+            }
+        }
+
+        if (game.buffTimes[0] && this.floorTarget !== 3 && !this.buffed) {
+            // if we have the temp buffs, increase the floor target
+            // this should probably only be for floors up to 50
+            this.floorTarget++;
+            this.buffed = true;
+        } else if (!game.buffTimes[0] && this.buffed) {
+            this.buffed = false;
+        }
+    }
+
     getTempRunes() {
         if (game.roomsFromStairwell) {
             return this.moveToStairwell();
@@ -141,7 +142,8 @@ class mainFuncs {
         if (
             game.fightingMonster &&
             game.altarUpgradesBought[6] &&
-            game.monsterHealth.gt(game.attackDamage)
+            game.monsterHealth.gt(game.attackDamage) &&
+            game.level.gte("10^^10")
         ) {
             flee();
             return toStairwell();
@@ -150,9 +152,10 @@ class mainFuncs {
         if (game.fightingMonster && game.energy > 15) {
             attack();
             if (
-                game.vanillaHoney.gte(1) &&
-                game.energy < 25 &&
-                !game.altarUpgradesBought[2]
+                (game.vanillaHoney.gte(1) &&
+                    game.energy < 25 &&
+                    !game.altarUpgradesBought[2]) ||
+                game.vanillaHoney.gte(2500)
             ) {
                 // consume vanilla honey for energy
                 consumeHoney(2);
@@ -261,9 +264,7 @@ class Section3 extends mainFuncs {
 
     main() {
         this.buySharkUpgrades();
-        if (game.cocoaBars < 10) {
-            this.gainCocoaBarsNoConfirm();
-        }
+        this.gainCocoaBarsNoConfirm();
         super.main();
     }
 
@@ -305,20 +306,18 @@ class Section3 extends mainFuncs {
     }
 }
 
-class Section4 extends mainFuncs {
+class Section4 extends Section3 {
     constructor(tier, targets) {
         super(tier, targets);
     }
 
     main() {
-        if (game.cocoaBars === 10) {
-            this.darkOrbPrestigeNoConfirm();
-        }
-
+        this.darkOrbPrestigeNoConfirm();
         super.main();
     }
 
     darkOrbPrestigeNoConfirm() {
+        // script.js: 2096
         if (game.cocoaHoney.gte(darkOrbRequirements[game.darkOrbs])) {
             game.darkOrbs++;
             darkOrbReset();
