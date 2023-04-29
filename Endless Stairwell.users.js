@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.6.1
+// @version      0.6.2
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -18,12 +18,16 @@ const sharkShopFloor = 149;
 const cocoaUpgrades = { 1: 6, 3: 5, 4: 40, 5: 115, 6: 600, 7: 2200 };
 const fStop = ExpantaNum("10^^11");
 
+let previousKey = 0;
+let pressedKey = 0;
+let debugRunOnce = false;
+
 function setTitleText() {
     let el = document.getElementsByClassName("title-bar-text")[0];
     let prestigeAt = format(game.cocoaHoney.mul(2), 0);
     el.innerText = `Endless Stairwell - Autoplay ${
         started ? "ON" : "OFF"
-    } - Prestige @ ${prestigeAt} - Section ${currentSection}`;
+    } - Prestige @ ${prestigeAt} - Section ${currentSection} - Last Key ${previousKey} - Pressed Key ${pressedKey}`;
 }
 
 class mainFuncs {
@@ -461,7 +465,11 @@ class Section6 extends Section5 {
 }
 
 function main() {
-    if (started) {
+    if (started || debugRunOnce) {
+        if (debugRunOnce) {
+            debugRunOnce = false;
+        }
+
         if ((document.getElementById("deathDiv").style.display = "block")) {
             deathClose();
         }
@@ -507,6 +515,17 @@ let s5 = new Section5(4, {
     3: Infinity,
 });
 let s6 = new Section6(5, {});
+
+document.addEventListener("keypress", (event) => {
+    pressedKey = event.keyCode;
+    if (
+        (pressedKey === 122 || pressedKey === 120) &&
+        pressedKey !== previousKey
+    ) {
+        debugRunOnce = true;
+        previousKey = pressedKey;
+    }
+});
 
 setInterval(main, 20);
 setInterval(setTitleText, 250);
