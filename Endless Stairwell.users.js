@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.5.1
+// @version      0.5.2
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -416,7 +416,7 @@ class Section4 extends Section3 {
     }
 }
 
-class Section5 extends mainFuncs {
+class Section5 extends Section4 {
     constructor(tier, targets) {
         super(tier, targets);
     }
@@ -428,7 +428,11 @@ class Section5 extends mainFuncs {
     }
 
     get shouldCocoaPrestige() {
-        return game.roomsExplored >= 500;
+        return (
+            (game.roomsExplored >= 500 && game.hyperplasm.eq(0)) ||
+            (cocoaHoneyToGet.gte(darkOrbRequirements[game.darkOrbs]) &&
+                game.cocoaHoney.lt(darkOrbRequirements[game.darkOrbs]))
+        );
     }
 
     combinate() {
@@ -477,9 +481,9 @@ let s4 = new Section4(3, {
     3: Infinity,
 });
 let s5 = new Section5(4, {
-    0: "10^^^^2",
-    1: "10^^^^3",
-    2: "10^^^^5",
+    0: "10^^^1000000",
+    1: "10^^^^2",
+    2: "10^^^^3",
     3: Infinity,
 });
 
