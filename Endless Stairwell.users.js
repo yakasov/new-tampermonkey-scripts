@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.6.0
+// @version      0.6.1
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -450,7 +450,7 @@ class Section5 extends Section4 {
     }
 }
 
-class Section6 extends Section4 {
+class Section6 extends Section5 {
     constructor(tier, targets) {
         super(tier, targets);
     }
@@ -506,7 +506,7 @@ let s5 = new Section5(4, {
     2: "10^^^10^^3",
     3: Infinity,
 });
-let s6 = newSection6(5, {});
+let s6 = new Section6(5, {});
 
 setInterval(main, 20);
 setInterval(setTitleText, 250);
