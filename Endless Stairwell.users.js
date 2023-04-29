@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.6.3
+// @version      0.7.1
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -17,6 +17,16 @@ const blueKeyFloor = 49;
 const sharkShopFloor = 149;
 const cocoaUpgrades = { 1: 6, 3: 5, 4: 40, 5: 115, 6: 600, 7: 2200 };
 const fStop = ExpantaNum("10^^11");
+const combinator2Upgrades = {
+    2: "J110",
+    3: "J300",
+    4: "J1000",
+    5: "J1500",
+    6: "J2000",
+    8: "J40000",
+    9: "J100000",
+    10: "J1e29",
+};
 
 let previousKey = 0;
 let pressedKey = 0;
@@ -464,6 +474,32 @@ class Section6 extends Section5 {
     }
 
     main() {
+        this.buyCombinatorUpgrades();
+        super.main();
+    }
+
+    get shouldCocoaPrestige() {
+        for (const [k, v] of Object.entries(combinator2Upgrades)) {
+            if (cocoaHoneyToGet.gte(v) && !game.combinatorUpgrades2Bought[k]) {
+                return true;
+            }
+        }
+        return super.shouldCocoaPrestige;
+    }
+
+    buyCombinatorUpgrades() {
+        for (let i = 1; i < 12; i++) {
+            buyCombinatorUpgrade2(i);
+        }
+    }
+}
+
+class Section7 extends Section6 {
+    constructor(tier, targets) {
+        super(tier, targets);
+    }
+
+    main() {
         //super.main();
     }
 }
@@ -496,9 +532,12 @@ function main() {
         } else if (game.cocoaBars < 25) {
             currentSection = 5;
             s5.main();
-        } else {
+        } else if (!game.combinatorUpgrades2Bought[10]) {
             currentSection = 6;
             s6.main();
+        } else {
+            currentSection = 7;
+            s7.main();
         }
     }
 }
@@ -518,7 +557,13 @@ let s5 = new Section5(4, {
     2: "10^^^10^^3",
     3: Infinity,
 });
-let s6 = new Section6(5, {});
+let s6 = new Section6(5, {
+    0: "J20",
+    1: "J40",
+    2: "J80",
+    3: Infinity,
+});
+let s7 = new Section7(6, {});
 
 document.addEventListener("keypress", (event) => {
     pressedKey = event.keyCode;
@@ -534,7 +579,7 @@ document.addEventListener("keypress", (event) => {
 });
 
 setInterval(main, 20);
-setInterval(setTitleText, 250);
+setInterval(setTitleText, 10);
 GM_registerMenuCommand("Toggle autoplay", () => {
     started = !started;
 });
