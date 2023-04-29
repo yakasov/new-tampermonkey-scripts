@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.5.0
+// @version      0.5.1
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -241,20 +241,20 @@ class mainFuncs {
             (game.currentFloor < 200 || game.currentFloor > 275) &&
             game.combinatorUpgradesBought[2]
         ) {
-            toFloor249();
+            toFloor248();
         } else if (
             floor >= 276 &&
             floor <= 325 &&
             (game.currentFloor < 275 || game.currentFloor > 325) &&
             game.combinatorUpgrades2Bought[4]
         ) {
-            toFloor249();
+            toFloor299();
         } else if (
             floor >= 326 &&
             game.currentFloor < 325 &&
             game.goldenUpgradesBought[0]
         ) {
-            toFloor249();
+            toFloor351();
         }
     }
 
