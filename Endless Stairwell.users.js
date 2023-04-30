@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      1.0.0
+// @version      1.0.1
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -74,7 +74,9 @@ function setTitleText() {
     let timeSinceAttack = format(game.timeSinceAttack, 2);
     el.innerText = `Endless Stairwell - Autoplay ${
         started ? "ON" : "OFF"
-    } - Prestige @ ${prestigeAt} - Section ${currentSection} - Last Key ${previousKey} - Pressed Key ${pressedKey} - Next Eel ${nextEel} - Blood ${blood} - NaN Monsters ${nanMonsters} - Target ${target} - Override ${targetOverride} - Since Attack ${timeSinceAttack}`;
+    } - Prestige @ ${prestigeAt} - Section ${currentSection} - Last Key ${previousKey} - Pressed Key ${pressedKey} - Next Eel ${nextEel} - Blood ${blood} - NaN Monsters ${nanMonsters} - Target ${target} - Override ${targetOverride} - Since Attack ${timeSinceAttack} - Deaths ${
+        game.deaths
+    }`;
 }
 
 class mainFuncs {
@@ -388,7 +390,7 @@ class Section1 extends mainFuncs {
     }
 
     main() {
-        if (game.specialItemsAcquired[0] && game.level.gte(15)) {
+        if (game.specialItemsAcquired[0] && game.level.gte(22)) {
             this.floorTargetOverride = blueKeyFloor;
         } else {
             this.floorTargetOverride = null;
@@ -804,7 +806,7 @@ function main() {
     }
 }
 
-let s1 = new Section1(0, { 0: 10, 1: 13, 2: 17, 3: Infinity });
+let s1 = new Section1(0, { 0: 10, 1: 17, 2: 20, 3: Infinity });
 let s2 = new Section2(1, { 0: 40, 1: 55, 2: 80, 3: Infinity });
 let s3 = new Section3(2, {
     0: 1e1000,
