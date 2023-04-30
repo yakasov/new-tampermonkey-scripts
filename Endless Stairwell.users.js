@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.8.2
+// @version      0.9.0
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -46,6 +46,17 @@ const shark2Upgrades = {
     1: "JJ1e80",
     2: "JJ10^^60",
     3: "JJ10^^^60",
+};
+const goldenHoneyUpgrades = {
+    0: ExpantaNum.expansion(10, 10),
+    1: ExpantaNum.expansion(10, 15),
+    2: ExpantaNum.expansion(10, 25),
+    3: ExpantaNum.expansion(10, 50),
+    4: ExpantaNum.expansion(10, 100),
+    5: ExpantaNum.expansion(10, 500),
+    6: ExpantaNum.expansion(10, 5000),
+    7: ExpantaNum.expansion(10, 15000000),
+    8: ExpantaNum.expansion(10, 1e8),
 };
 
 let previousKey = 0;
@@ -252,7 +263,6 @@ class mainFuncs {
             enterFloor();
         }
 
-        console.log(`Arrived at floor ${floor}`);
         return true;
     }
 
@@ -582,27 +592,33 @@ class Section7 extends Section5 {
     }
 
     basicAttack() {
-        if (
-            game.attackDamage.gt(ExpantaNum(gemEelLevels[game.gemEelsBeaten]))
-        ) {
-            this.floorTargetOverride = eelFloor;
-            if (super.moveToFloor(eelFloor, true)) {
-                if (game.attackDamage.gt(game.monsterMaxHealth)) {
-                    attack();
-                } else {
-                    flee();
+        if (!this.targets) {
+            if (
+                game.attackDamage.gt(
+                    ExpantaNum(gemEelLevels[game.gemEelsBeaten])
+                )
+            ) {
+                this.floorTargetOverride = eelFloor;
+                if (super.moveToFloor(eelFloor, true)) {
+                    if (game.attackDamage.gt(game.monsterMaxHealth)) {
+                        attack();
+                    } else {
+                        flee();
+                    }
+                }
+            } else {
+                this.floorTargetOverride = game.floorsWithRooms[5][3];
+                if (super.moveToFloor(game.floorsWithRooms[5][3], true)) {
+                    super.basicAttack();
                 }
             }
         } else {
-            this.floorTargetOverride = game.floorsWithRooms[5][3];
-            if (super.moveToFloor(game.floorsWithRooms[5][3], true)) {
-                super.basicAttack();
-            }
+            super.basicAttack();
         }
     }
 }
 
-class Section8 extends mainFuncs {
+class Section8 extends Section7 {
     constructor(tier, targets) {
         super(tier, targets);
     }
@@ -657,6 +673,32 @@ class Section8 extends mainFuncs {
     }
 }
 
+class Section9 extends Section8 {
+    constructor(tier, targets) {
+        super(tier, targets);
+    }
+
+    main() {
+        this.buyGoldenHoneyUpgrades();
+        super.main();
+    }
+
+    get shouldCocoaPrestige() {
+        for (const [k, v] of Object.entries(goldenHoneyUpgrades)) {
+            if (cocoaHoneyToGet.gte(v) && !game.goldenUpgradesBought[k]) {
+                return true;
+            }
+        }
+        return super.shouldCocoaPrestige;
+    }
+
+    buyGoldenHoneyUpgrades() {
+        for (let i = 1; i < 10; i++) {
+            buyGoldenUpgrade(i);
+        }
+    }
+}
+
 function main() {
     if (started || debugRunOnce) {
         if (debugRunOnce) {
@@ -691,9 +733,12 @@ function main() {
         } else if (!game.monsterBloodUpgradesBought[9]) {
             currentSection = 7;
             s7.main();
-        } else {
+        } else if (!game.sharkUpgrades2Bought[6]) {
             currentSection = 8;
             s8.main();
+        } else {
+            currentSection = 9;
+            s9.main();
         }
     }
 }
@@ -720,11 +765,20 @@ let s6 = new Section6(5, {
     3: Infinity,
 });
 let s7 = new Section7(6, {}); // section 7 is special and only has one monster floor, so no targets
-let s8 = new Section8(7, {
+let s8 = new Section8(6, {
     0: "JJ60",
     1: "JJ1e90",
     2: "JJ10^^60",
     3: Infinity,
+});
+let s9 = new Section9(7, {
+    0: ExpantaNum.expansion(10, 15),
+    1: ExpantaNum.expansion(10, 250),
+    2: ExpantaNum.expansion(10, 5000),
+    3: ExpantaNum.expansion(10, 15000),
+    6: ExpantaNum.expansion(10, 15000000),
+    7: ExpantaNum.expansion(10, 1e8),
+    8: ExpantaNum.expansion(10, 1e10),
 });
 
 document.addEventListener("keypress", (event) => {
