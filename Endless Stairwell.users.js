@@ -20,6 +20,7 @@ const blueKeyFloor = 49;
 const eelFloor = 303;
 const sharkTalkFloor = 305;
 const jellyFloor = 349;
+const goldenEelFloor = 499;
 const cocoaUpgrades = { 1: 6, 3: 5, 4: 40, 5: 115, 6: 600, 7: 2200 };
 const combinator2Upgrades = {
     2: "J110",
@@ -566,7 +567,10 @@ class Section7 extends Section5 {
     }
 
     get shouldCocoaPrestige() {
-        if (game.roomsExplored >= 500) {
+        if (
+            (game.roomsExplored >= 500 && game.currentFloor < 350) ||
+            game.roomsExplored >= 1500
+        ) {
             return true;
         }
 
@@ -680,7 +684,16 @@ class Section9 extends Section8 {
 
     main() {
         this.buyGoldenHoneyUpgrades();
-        super.main();
+        if (
+            game.level.gte(ExpantaNum.expansion(10, 1e12)) &&
+            !game.goldenEelDefeated
+        ) {
+            this.killGoldenEel();
+        } else if (game.goldenEelDefeated) {
+            this.moveToFloor(500);
+        } else {
+            super.main();
+        }
     }
 
     get shouldCocoaPrestige() {
@@ -695,6 +708,13 @@ class Section9 extends Section8 {
     buyGoldenHoneyUpgrades() {
         for (let i = 1; i < 10; i++) {
             buyGoldenUpgrade(i);
+        }
+    }
+
+    killGoldenEel() {
+        if (super.moveToFloor(goldenEelFloor)) {
+            goldenEelAttack();
+            consumeHoney(2);
         }
     }
 }
@@ -777,8 +797,8 @@ let s9 = new Section9(7, {
     2: ExpantaNum.expansion(10, 5000),
     3: ExpantaNum.expansion(10, 15000),
     6: ExpantaNum.expansion(10, 15000000),
-    7: ExpantaNum.expansion(10, 1e8),
-    8: ExpantaNum.expansion(10, 1e10),
+    7: ExpantaNum.expansion(10, 1e10),
+    8: ExpantaNum.expansion(10, 1e20),
 });
 
 document.addEventListener("keypress", (event) => {
