@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.9.1
+// @version      1.0.0
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -71,9 +71,10 @@ function setTitleText() {
     let prestigeAt = format(game.cocoaHoney.mul(1.8).floor(), 0);
     let nextEel = format(ExpantaNum(gemEelLevels[game.gemEelsBeaten]), 0);
     let blood = format(game.monsterBlood, 0);
+    let timeSinceAttack = format(game.timeSinceAttack, 2);
     el.innerText = `Endless Stairwell - Autoplay ${
         started ? "ON" : "OFF"
-    } - Prestige @ ${prestigeAt} - Section ${currentSection} - Last Key ${previousKey} - Pressed Key ${pressedKey} - Next Eel ${nextEel} - Blood ${blood} - NaN Monsters ${nanMonsters} - Target ${target} - Override ${targetOverride}`;
+    } - Prestige @ ${prestigeAt} - Section ${currentSection} - Last Key ${previousKey} - Pressed Key ${pressedKey} - Next Eel ${nextEel} - Blood ${blood} - NaN Monsters ${nanMonsters} - Target ${target} - Override ${targetOverride} - Since Attack ${timeSinceAttack}`;
 }
 
 class mainFuncs {
@@ -224,9 +225,8 @@ class mainFuncs {
     basicAttack() {
         if (
             game.fightingMonster &&
-            game.altarUpgradesBought[6] &&
-            game.monsterHealth.gt(game.attackDamage) &&
-            game.level.gte("10^^10")
+            game.currentFloor > 100 &&
+            game.monsterHealth.gt(game.attackDamage)
         ) {
             flee();
             return toStairwell();
@@ -665,8 +665,9 @@ class Section8 extends Section7 {
     main() {
         if (this.shouldTalkToShark) {
             this.talkToShark();
-        } else {
+        } else if (!game.jellyDefeated) {
             this.fightJelly();
+        } else {
             this.buySharkUpgrades();
             super.main();
         }
@@ -781,7 +782,10 @@ function main() {
         } else if (game.cocoaBars < 20) {
             currentSection = 4;
             s4.main();
-        } else if (!game.combinatorUpgradesBought[9]) {
+        } else if (
+            !game.combinatorUpgradesBought[9] ||
+            game.hyperplasm.lte(1e200)
+        ) {
             currentSection = 5;
             s5.main();
         } else if (!game.combinatorUpgrades2Bought[10]) {
@@ -823,7 +827,7 @@ let s5 = new Section5(4, {
 let s6 = new Section6(5, {
     0: "J20",
     1: "J40",
-    2: "J80",
+    2: "J55",
     3: Infinity,
 });
 let s7 = new Section7(6, {}); // section 7 is special and only has one monster floor, so no targets
@@ -834,7 +838,7 @@ let s8 = new Section8(6, {
     3: Infinity,
 });
 let s9 = new Section9(7, {
-    0: ExpantaNum.expansion(10, 45),
+    0: ExpantaNum.expansion(10, 75),
     1: ExpantaNum.expansion(10, 250),
     2: ExpantaNum.expansion(10, 5000),
     3: ExpantaNum.expansion(10, 15000),
