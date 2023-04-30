@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.9.0
+// @version      0.9.1
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -15,6 +15,8 @@
 let started = false;
 let currentSection = 0;
 let nanMonsters = 0;
+let target = 0;
+let targetOverride = 0;
 const runes = [4, 4, 4];
 const blueKeyFloor = 49;
 const eelFloor = 303;
@@ -66,12 +68,12 @@ let debugRunOnce = false;
 
 function setTitleText() {
     let el = document.getElementsByClassName("title-bar-text")[0];
-    let prestigeAt = format(game.cocoaHoney.mul(2), 0);
+    let prestigeAt = format(game.cocoaHoney.mul(1.8).floor(), 0);
     let nextEel = format(ExpantaNum(gemEelLevels[game.gemEelsBeaten]), 0);
     let blood = format(game.monsterBlood, 0);
     el.innerText = `Endless Stairwell - Autoplay ${
         started ? "ON" : "OFF"
-    } - Prestige @ ${prestigeAt} - Section ${currentSection} - Last Key ${previousKey} - Pressed Key ${pressedKey} - Next Eel ${nextEel} - Blood ${blood} - NaN Monsters ${nanMonsters}`;
+    } - Prestige @ ${prestigeAt} - Section ${currentSection} - Last Key ${previousKey} - Pressed Key ${pressedKey} - Next Eel ${nextEel} - Blood ${blood} - NaN Monsters ${nanMonsters} - Target ${target} - Override ${targetOverride}`;
 }
 
 class mainFuncs {
@@ -84,6 +86,11 @@ class mainFuncs {
     }
 
     main() {
+        if (document.getElementById("deathDiv").style.display == "block") {
+            this.cocoaPrestigeNoConfirm();
+            deathClose();
+        }
+
         if (!game.floorDifficulty && game.fightingMonster) {
             // sometimes, I don't know how, it can get stuck in a fight against a NaN health monster
             // obviously it's impossible to beat so just 'cheat' a bit and exit the fight and go to the stairwell
@@ -105,22 +112,27 @@ class mainFuncs {
         }
 
         this.setFloorTarget();
+        targetOverride = this.floorTargetOverride;
 
         if (this.shouldMoveToStairwell) {
             // move to stairwell if floorTarget has changed
             this.moveToStairwell();
-        } else if (this.checkTempRunes && game.level.lte(500)) {
+        } else if (this.checkTempRunes && game.level.lte(10000)) {
             this.getTempRunes();
-        } else if (this.checkPermRunes && game.level.lte(500)) {
+        } else if (this.checkPermRunes && game.level.lte(10000)) {
             this.getPermRunes(this.checkPermRunes);
-        } else if (this.floorTarget || this.floorTargetOverride) {
+        } else if (
+            this.floorTarget ||
+            this.floorTargetOverride ||
+            !Object.keys(this.targets).length
+        ) {
             this.getXP();
         }
     }
 
     get shouldCocoaPrestige() {
         return (
-            (cocoaHoneyToGet.gte(game.cocoaHoney.mul(2)) &&
+            (cocoaHoneyToGet.gte(game.cocoaHoney.mul(1.8).floor()) &&
                 game.cocoaBars < 9 &&
                 game.cocoaHoney.lte("10^^10")) ||
             (cocoaHoneyToGet.gte(cocoaBarRequirements[game.cocoaBars]) &&
@@ -166,6 +178,10 @@ class mainFuncs {
     }
 
     setFloorTarget() {
+        if (this.floorTargetOverride) {
+            return;
+        }
+
         for (const [k, v] of Object.entries(this.targets)) {
             if (game.level.lt(v)) {
                 this.floorTarget = k;
@@ -226,7 +242,7 @@ class mainFuncs {
             consumeHoney(2);
         }
 
-        if (game.fightingMonster && game.energy > 15) {
+        if (game.fightingMonster && game.energy > 20) {
             attack();
         } else if (!game.fightingMonster) {
             if (
@@ -246,6 +262,17 @@ class mainFuncs {
     }
 
     moveToFloor(floor, enter = false) {
+        target = floor;
+
+        if (
+            floor !== game.currentFloor &&
+            game.roomsFromStairwell &&
+            !game.fightingMonster &&
+            game.currentFloor !== eelFloor
+        ) {
+            return this.moveToStairwell();
+        }
+
         this.fastTravel(floor);
 
         if (game.currentFloor > floor) {
@@ -261,9 +288,8 @@ class mainFuncs {
                 return false;
             }
             console.log(`Entering floor ${floor}`);
-            enterFloor();
+            return enterFloor();
         }
-
         return true;
     }
 
@@ -378,6 +404,9 @@ class Section2 extends mainFuncs {
     }
 
     main() {
+        if (game.roomsExplored >= 300) {
+            super.moveToStairwell();
+        }
         this.buyAltarUpgrades();
         super.main();
     }
@@ -399,7 +428,6 @@ class Section3 extends mainFuncs {
     main() {
         this.buySharkUpgrades();
         this.gainCocoaBarsNoConfirm();
-
         super.main();
     }
 
@@ -537,6 +565,10 @@ class Section6 extends Section5 {
     }
 
     get shouldCocoaPrestige() {
+        if (game.roomsExplored >= 1000) {
+            return true;
+        }
+
         for (const [k, v] of Object.entries(combinator2Upgrades)) {
             if (cocoaHoneyToGet.gte(v) && !game.combinatorUpgrades2Bought[k]) {
                 return true;
@@ -567,10 +599,7 @@ class Section7 extends Section5 {
     }
 
     get shouldCocoaPrestige() {
-        if (
-            (game.roomsExplored >= 500 && game.currentFloor < 350) ||
-            game.roomsExplored >= 1500
-        ) {
+        if (game.roomsExplored >= 500 && game.currentFloor < 350) {
             return true;
         }
 
@@ -596,28 +625,34 @@ class Section7 extends Section5 {
     }
 
     basicAttack() {
-        if (!this.targets) {
-            if (
-                game.attackDamage.gt(
-                    ExpantaNum(gemEelLevels[game.gemEelsBeaten])
-                )
-            ) {
-                this.floorTargetOverride = eelFloor;
-                if (super.moveToFloor(eelFloor, true)) {
-                    if (game.attackDamage.gt(game.monsterMaxHealth)) {
-                        attack();
-                    } else {
-                        flee();
-                    }
+        if (
+            game.attackDamage.gt(ExpantaNum(gemEelLevels[game.gemEelsBeaten]))
+        ) {
+            this.floorTargetOverride = eelFloor;
+            if (super.moveToFloor(eelFloor, true)) {
+                if (game.attackDamage.gt(game.monsterMaxHealth)) {
+                    return attack();
+                } else {
+                    return flee();
+                }
+            }
+        } else {
+            this.floorTargetOverride = null;
+            if (Object.keys(this.targets).length) {
+                if (
+                    this.moveToFloor(
+                        game.floorsWithRooms[this.tier][this.floorTarget],
+                        true
+                    )
+                ) {
+                    return super.basicAttack();
                 }
             } else {
                 this.floorTargetOverride = game.floorsWithRooms[5][3];
                 if (super.moveToFloor(game.floorsWithRooms[5][3], true)) {
-                    super.basicAttack();
+                    return super.basicAttack();
                 }
             }
-        } else {
-            super.basicAttack();
         }
     }
 }
@@ -628,10 +663,13 @@ class Section8 extends Section7 {
     }
 
     main() {
-        this.talkToShark();
-        this.fightJelly();
-        this.buySharkUpgrades();
-        super.main();
+        if (this.shouldTalkToShark) {
+            this.talkToShark();
+        } else {
+            this.fightJelly();
+            this.buySharkUpgrades();
+            super.main();
+        }
     }
 
     get shouldCocoaPrestige() {
@@ -643,6 +681,14 @@ class Section8 extends Section7 {
         return super.shouldCocoaPrestige;
     }
 
+    get shouldTalkToShark() {
+        return (
+            !game.sharkCutscenesViewed ||
+            (game.jellyFought && game.sharkCutscenesViewed === 1) ||
+            (game.jellyDefeated && game.sharkCutscenesViewed === 2)
+        );
+    }
+
     buySharkUpgrades() {
         for (let i = 1; i < 8; i++) {
             buySharkUpgrade2(i);
@@ -650,12 +696,7 @@ class Section8 extends Section7 {
     }
 
     talkToShark() {
-        if (
-            (!game.sharkCutscenesViewed ||
-                (game.jellyFought && game.sharkCutscenesViewed === 1) ||
-                (game.jellyDefeated && game.sharkCutscenesViewed === 2)) &&
-            super.moveToFloor(sharkTalkFloor)
-        ) {
+        if (super.moveToFloor(sharkTalkFloor)) {
             sharkDialogueContinue();
         }
 
@@ -690,7 +731,7 @@ class Section9 extends Section8 {
         ) {
             this.killGoldenEel();
         } else if (game.goldenEelDefeated) {
-            this.moveToFloor(500);
+            super.moveToFloor(500);
         } else {
             super.main();
         }
@@ -725,10 +766,6 @@ function main() {
             debugRunOnce = false;
         }
 
-        if (document.getElementById("deathDiv").style.display == "block") {
-            deathClose();
-        }
-
         if (!game.specialItemsAcquired[1] || game.level.lte(25)) {
             currentSection = 1;
             s1.main();
@@ -744,7 +781,7 @@ function main() {
         } else if (game.cocoaBars < 20) {
             currentSection = 4;
             s4.main();
-        } else if (game.cocoaBars < 25) {
+        } else if (!game.combinatorUpgradesBought[9]) {
             currentSection = 5;
             s5.main();
         } else if (!game.combinatorUpgrades2Bought[10]) {
@@ -765,7 +802,12 @@ function main() {
 
 let s1 = new Section1(0, { 0: 10, 1: 13, 2: 17, 3: Infinity });
 let s2 = new Section2(1, { 0: 40, 1: 55, 2: 80, 3: Infinity });
-let s3 = new Section3(2, { 0: 1e200, 1: 1e1000, 2: 1e5000, 3: Infinity });
+let s3 = new Section3(2, {
+    0: 1e1000,
+    1: "e1e15000",
+    2: "e1e45000",
+    3: Infinity,
+});
 let s4 = new Section4(3, {
     0: "10^^25",
     1: "10^^50",
@@ -792,7 +834,7 @@ let s8 = new Section8(6, {
     3: Infinity,
 });
 let s9 = new Section9(7, {
-    0: ExpantaNum.expansion(10, 15),
+    0: ExpantaNum.expansion(10, 45),
     1: ExpantaNum.expansion(10, 250),
     2: ExpantaNum.expansion(10, 5000),
     3: ExpantaNum.expansion(10, 15000),
