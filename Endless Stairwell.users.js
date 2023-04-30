@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      0.8.1
+// @version      0.8.2
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -18,6 +18,8 @@ let nanMonsters = 0;
 const runes = [4, 4, 4];
 const blueKeyFloor = 49;
 const eelFloor = 303;
+const sharkTalkFloor = 305;
+const jellyFloor = 349;
 const cocoaUpgrades = { 1: 6, 3: 5, 4: 40, 5: 115, 6: 600, 7: 2200 };
 const combinator2Upgrades = {
     2: "J110",
@@ -38,6 +40,12 @@ const bloodUpgrades = {
     5: "J1e122",
     6: "J1e420",
     7: "Je1e100",
+};
+const shark2Upgrades = {
+    0: "JJ50",
+    1: "JJ1e80",
+    2: "JJ10^^60",
+    3: "JJ10^^^60",
 };
 
 let previousKey = 0;
@@ -75,7 +83,7 @@ class mainFuncs {
             game.fightingMonster = false;
             toStairwell();
         } else if (game.roomsExplored >= 3000) {
-            // similiarly the automation breaks at room ~4000. again I have no clue why
+            // similarly the automation breaks at room ~4000. again I have no clue why
             // probably just the way the health is increasing or something
             toStairwell();
         }
@@ -93,7 +101,7 @@ class mainFuncs {
             this.getTempRunes();
         } else if (this.checkPermRunes && game.level.lte(500)) {
             this.getPermRunes(this.checkPermRunes);
-        } else {
+        } else if (this.floorTarget || this.floorTargetOverride) {
             this.getXP();
         }
     }
@@ -240,9 +248,11 @@ class mainFuncs {
             if (game.energy !== 100) {
                 return false;
             }
+            console.log(`Entering floor ${floor}`);
             enterFloor();
         }
 
+        console.log(`Arrived at floor ${floor}`);
         return true;
     }
 
@@ -261,6 +271,7 @@ class mainFuncs {
             game.currentFloor > 25 &&
             game.altarUpgradesBought[4]
         ) {
+            console.log("Fast travelling to ground floor");
             toGroundFloor();
         } else if (
             floor >= 26 &&
@@ -268,6 +279,7 @@ class mainFuncs {
             (game.currentFloor < 25 || game.currentFloor > 75) &&
             game.altarUpgradesBought[4]
         ) {
+            console.log("Fast travelling to floor 49");
             toFloor49();
         } else if (
             floor >= 76 &&
@@ -275,6 +287,7 @@ class mainFuncs {
             (game.currentFloor < 75 || game.currentFloor > 125) &&
             game.altarUpgradesBought[4]
         ) {
+            console.log("Fast travelling to floor 99");
             toFloor99();
         } else if (
             floor >= 126 &&
@@ -282,6 +295,7 @@ class mainFuncs {
             (game.currentFloor < 125 || game.currentFloor > 200) &&
             game.sharkUpgradesBought[2]
         ) {
+            console.log("Fast travelling to floor 149");
             toFloor149();
         } else if (
             floor >= 201 &&
@@ -289,6 +303,7 @@ class mainFuncs {
             (game.currentFloor < 200 || game.currentFloor > 275) &&
             game.combinatorUpgradesBought[2]
         ) {
+            console.log("Fast travelling to floor 248");
             toFloor248();
         } else if (
             floor >= 276 &&
@@ -296,12 +311,14 @@ class mainFuncs {
             (game.currentFloor < 275 || game.currentFloor > 325) &&
             game.combinatorUpgrades2Bought[4]
         ) {
+            console.log("Fast travelling to floor 299");
             toFloor299();
         } else if (
             floor >= 326 &&
             game.currentFloor < 325 &&
             game.goldenUpgradesBought[0]
         ) {
+            console.log("Fast travelling to floor 351");
             toFloor351();
         }
     }
@@ -585,6 +602,61 @@ class Section7 extends Section5 {
     }
 }
 
+class Section8 extends mainFuncs {
+    constructor(tier, targets) {
+        super(tier, targets);
+    }
+
+    main() {
+        this.talkToShark();
+        this.fightJelly();
+        this.buySharkUpgrades();
+        super.main();
+    }
+
+    get shouldCocoaPrestige() {
+        for (const [k, v] of Object.entries(shark2Upgrades)) {
+            if (cocoaHoneyToGet.gte(v) && !game.sharkUpgrades2Bought[k]) {
+                return true;
+            }
+        }
+        return super.shouldCocoaPrestige;
+    }
+
+    buySharkUpgrades() {
+        for (let i = 1; i < 8; i++) {
+            buySharkUpgrade2(i);
+        }
+    }
+
+    talkToShark() {
+        if (
+            (!game.sharkCutscenesViewed ||
+                (game.jellyFought && game.sharkCutscenesViewed === 1) ||
+                (game.jellyDefeated && game.sharkCutscenesViewed === 2)) &&
+            super.moveToFloor(sharkTalkFloor)
+        ) {
+            sharkDialogueContinue();
+        }
+
+        if (document.getElementById("glockGetDiv").style.display == "block") {
+            closeGlockDiv();
+        }
+    }
+
+    fightJelly() {
+        if (!game.jellyFought && game.sharkCutscenesViewed === 1) {
+            if (super.moveToFloor(jellyFloor, true)) {
+                flee();
+            }
+        } else if (!game.jellyDefeated && game.sharkCutscenesViewed === 2) {
+            if (super.moveToFloor(jellyFloor, true)) {
+                attack();
+            }
+        }
+    }
+}
+
 function main() {
     if (started || debugRunOnce) {
         if (debugRunOnce) {
@@ -621,6 +693,7 @@ function main() {
             s7.main();
         } else {
             currentSection = 8;
+            s8.main();
         }
     }
 }
@@ -647,6 +720,12 @@ let s6 = new Section6(5, {
     3: Infinity,
 });
 let s7 = new Section7(6, {}); // section 7 is special and only has one monster floor, so no targets
+let s8 = new Section8(7, {
+    0: "JJ60",
+    1: "JJ1e90",
+    2: "JJ10^^60",
+    3: Infinity,
+});
 
 document.addEventListener("keypress", (event) => {
     pressedKey = event.keyCode;
