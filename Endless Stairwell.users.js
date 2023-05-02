@@ -68,14 +68,18 @@ let debugRunOnce = false;
 
 function setTitleText() {
     let el = document.getElementsByClassName("title-bar-text")[0];
-    let prestigeAt = format(game.cocoaHoney.mul(1.8).floor(), 0);
+    let prestigeAt = game.cocoaHoney.mul(1.8).floor();
+    let prestigeAtDisplay = `${format(prestigeAt, 0)} (LVL ${format(
+        ExpantaNum(500).mul(ExpantaNum(2).pow(prestigeAt)),
+        0
+    )})`;
     let nextEel = format(ExpantaNum(gemEelLevels[game.gemEelsBeaten]), 0);
     let blood = format(game.monsterBlood, 0);
     let timeSinceAttack = format(game.timeSinceAttack, 2);
     let runesBought = `${game.redPermanentBought} ${game.bluePermanentBought} ${game.greenPermanentBought}`;
     el.innerText = `Endless Stairwell - Autoplay ${
         started ? "ON" : "OFF"
-    } - Prestige @ ${prestigeAt} - Section ${currentSection} - Last Key ${previousKey} - Pressed Key ${pressedKey} - Next Eel ${nextEel} - Blood ${blood} - NaN Monsters ${nanMonsters} - Target ${target} - Override ${targetOverride} - Since Attack ${timeSinceAttack} - Deaths ${
+    } - Prestige @ ${prestigeAtDisplay} - Section ${currentSection} - Last Key ${previousKey} (${pressedKey}) - Next Eel ${nextEel} - Blood ${blood} - NaNs ${nanMonsters} - Target ${target} (${targetOverride}) - Last ATK ${timeSinceAttack} - Deaths ${
         game.deaths
     } - Runes ${runesBought}`;
 }
@@ -251,7 +255,7 @@ class mainFuncs {
         if (
             game.fightingMonster &&
             game.energy >= 20 &&
-            game.timeSinceAttack >= 2
+            (game.energy >= 75 || game.timeSinceAttack >= 2)
         ) {
             attack();
             if (game.health.lte(game.maxHealth.div(2.5)) && game.honey.gte(1)) {
