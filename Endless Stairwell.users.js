@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      1.0.2
+// @version      1.0.3
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -72,11 +72,12 @@ function setTitleText() {
     let nextEel = format(ExpantaNum(gemEelLevels[game.gemEelsBeaten]), 0);
     let blood = format(game.monsterBlood, 0);
     let timeSinceAttack = format(game.timeSinceAttack, 2);
+    let runesBought = `${game.redPermanentBought} ${game.bluePermanentBought} ${game.greenPermanentBought}`;
     el.innerText = `Endless Stairwell - Autoplay ${
         started ? "ON" : "OFF"
     } - Prestige @ ${prestigeAt} - Section ${currentSection} - Last Key ${previousKey} - Pressed Key ${pressedKey} - Next Eel ${nextEel} - Blood ${blood} - NaN Monsters ${nanMonsters} - Target ${target} - Override ${targetOverride} - Since Attack ${timeSinceAttack} - Deaths ${
         game.deaths
-    }`;
+    } - Runes ${runesBought}`;
 }
 
 class mainFuncs {
@@ -247,20 +248,26 @@ class mainFuncs {
             consumeHoney(2);
         }
 
-        if (game.fightingMonster && game.energy >= 20) {
+        if (
+            game.fightingMonster &&
+            game.energy >= 20 &&
+            game.timeSinceAttack >= 2
+        ) {
             attack();
+            if (game.health.lte(game.maxHealth.div(2.5)) && game.honey.gte(1)) {
+                consumeHoney(1);
+            }
         } else if (!game.fightingMonster) {
             if (
-                game.health.lte(game.maxHealth.div(1.8)) &&
+                game.health.lte(game.maxHealth.div(1.5)) &&
                 game.health.lte(1e5)
             ) {
                 // go to stairwell if health low
                 toStairwell();
             } else if (
-                game.energy >= 15 ||
+                game.energy >= 60 ||
                 game.attackDamage.gt(game.monsterMaxHealth)
             ) {
-                // only move on if energy maxed again or if we can kill in one hit
                 newRoom();
             }
         }
