@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      1.0.1
+// @version      1.0.2
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -186,7 +186,10 @@ class mainFuncs {
         }
 
         for (const [k, v] of Object.entries(this.targets)) {
-            if (game.level.lt(v)) {
+            if (
+                (game.level.lt(v) && currentSection < 4) ||
+                game.attackDamage.lt(v)
+            ) {
                 this.floorTarget = k;
                 break;
             }
@@ -244,7 +247,7 @@ class mainFuncs {
             consumeHoney(2);
         }
 
-        if (game.fightingMonster && game.energy > 20) {
+        if (game.fightingMonster && game.energy >= 20) {
             attack();
         } else if (!game.fightingMonster) {
             if (
@@ -254,7 +257,7 @@ class mainFuncs {
                 // go to stairwell if health low
                 toStairwell();
             } else if (
-                game.energy === 100 ||
+                game.energy >= 15 ||
                 game.attackDamage.gt(game.monsterMaxHealth)
             ) {
                 // only move on if energy maxed again or if we can kill in one hit
@@ -843,8 +846,8 @@ let s9 = new Section9(7, {
     0: ExpantaNum.expansion(10, 75),
     1: ExpantaNum.expansion(10, 250),
     2: ExpantaNum.expansion(10, 5000),
-    3: ExpantaNum.expansion(10, 15000),
-    6: ExpantaNum.expansion(10, 15000000),
+    3: ExpantaNum.expansion(10, 1e6),
+    6: ExpantaNum.expansion(10, 1e8),
     7: ExpantaNum.expansion(10, 1e10),
     8: ExpantaNum.expansion(10, 1e20),
 });
