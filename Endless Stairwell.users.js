@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Endless Stairwell Autoplay
 // @namespace    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/master/Endless%Stairwell%20Autoplay.users.js
-// @version      1.0.3
+// @version      1.0.4
 // @description  Autoplays Endless Stairwell by Demonin
 // @author       yakasov
 // @match        https://demonin.com/games/endlessStairwell/
@@ -246,7 +246,7 @@ class mainFuncs {
             (game.vanillaHoney.gte(1) &&
                 game.energy < 25 &&
                 !game.altarUpgradesBought[2]) ||
-            game.vanillaHoney.gte(2500)
+            game.vanillaHoney.gte(100)
         ) {
             // consume vanilla honey for energy
             consumeHoney(2);
@@ -876,7 +876,7 @@ document.addEventListener("keypress", (event) => {
     }
 });
 
-setInterval(main, 20);
+setInterval(main, 5);
 setInterval(setTitleText, 10);
 GM_registerMenuCommand("Toggle autoplay", () => {
     started = !started;
