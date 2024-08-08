@@ -11,8 +11,12 @@
 // @run-at       document-start
 // ==/UserScript==
 
-const scriptKeywords = ["pathfinder", "tracking", "consoleLoggerFactory"];
-const innerHTMLKeywords = [
+const scriptKeywords = [
+    "pathfinder",
+    "tracking",
+    "consoleLoggerFactory",
+    "tracker",
+    "experiment",
     "ads",
     "ONE_TRUST_LIBRARIES",
     "fandomContext",
@@ -20,21 +24,25 @@ const innerHTMLKeywords = [
     "_plc",
 ];
 
-new MutationObserver((mutationsList, observer) => {
+new MutationObserver((mutationsList, _) => {
     for (const mutation of mutationsList) {
         if (mutation.type === "childList") {
             mutation.addedNodes.forEach((node) => {
                 if (
                     node.tagName === "SCRIPT" &&
-                    (innerHTMLKeywords.some((kw) =>
-                        node.innerText.includes(kw)
-                    ) ||
-                        scriptKeywords.some((kw) => node.src.includes(kw)))
+                    scriptKeywords.some(
+                        (kw) =>
+                            node.src.includes(kw) || node.innerText.includes(kw)
+                    )
                 ) {
                     node.remove();
                     console.log(
                         "Remove Fandom Annoyances blocked script:",
-                        node.src
+                        scriptKeywords.find(
+                            (kw) =>
+                                node.src.includes(kw) ||
+                                node.innerText.includes(kw)
+                        )
                     );
                 }
             });
