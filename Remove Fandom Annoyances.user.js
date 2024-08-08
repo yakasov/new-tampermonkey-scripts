@@ -3,8 +3,8 @@
 // @version      1.0
 // @description  Gets rid of lots of annoying elements on Fandom pages
 // @author       Yakasov
-// @updateURL    https://raw.githubusercontent.com/yakasov/Tampermonkey-Scripts/main/Remove%20Fandom%20Annoyances.user.js
-// @downloadURL  https://raw.githubusercontent.com/yakasov/Tampermonkey-Scripts/main/Remove%20Fandom%20Annoyances.user.js
+// @updateURL    https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/main/Remove%20Fandom%20Annoyances.user.js
+// @downloadURL  https://raw.githubusercontent.com/yakasov/new-tampermonkey-scripts/main/Remove%20Fandom%20Annoyances.user.js
 // @match        *.fandom.com/*
 // @require      http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js
 // @require      https://gist.githubusercontent.com/BrockA/2625891/raw/9c97aa67ff9c5d56be34a55ad6c18a314e5eb548/waitForKeyElements.js
